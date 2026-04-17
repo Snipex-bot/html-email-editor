@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import EmailEditor from "@/components/EmailEditor";
 
 export const metadata = { title: "HTML Email Editor" };
