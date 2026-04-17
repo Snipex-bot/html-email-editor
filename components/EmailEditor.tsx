@@ -239,7 +239,7 @@ export default function EmailEditor() {
   }, [html]);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950">
+    <div className="editor-root flex flex-col bg-gray-950">
 
       {/* ── TOOLBAR ─────────────────────────────────────────── */}
       <header className="flex items-center gap-3 px-4 h-12 border-b border-gray-800 bg-gray-900 flex-shrink-0">

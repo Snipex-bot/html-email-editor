@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { GripVertical, Trash2, ChevronDown, ChevronRight, Layers } from "lucide-react";
+import { GripVertical, Trash2, ChevronDown, ChevronRight, Layers, ChevronUp } from "lucide-react";
 import type { ActiveBlock } from "./types";
 
 const TYPE_COLORS: Record<string, string> = {
@@ -22,31 +22,38 @@ interface Props {
 
 export default function ActiveBlocksList({ blocks, onChange, onDelete, onReorder }: Props) {
   const dragIdx = useRef<number | null>(null);
-  const [dragOver, setDragOver] = useState<number | null>(null);
+  const [dropTarget, setDropTarget] = useState<number | null>(null);
 
   const onDragStart = (e: React.DragEvent, idx: number) => {
     dragIdx.current = idx;
     e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", String(idx));
+    // Use a distinct key so palette drops are ignored here
+    e.dataTransfer.setData("application/active-block-idx", String(idx));
   };
 
   const onDragOver = (e: React.DragEvent, idx: number) => {
+    // Only react to reorder drags, not palette drags
+    if (!e.dataTransfer.types.includes("application/active-block-idx")) return;
     e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = "move";
-    setDragOver(idx);
+    setDropTarget(idx);
   };
 
   const onDrop = (e: React.DragEvent, toIdx: number) => {
+    if (!e.dataTransfer.types.includes("application/active-block-idx")) return;
     e.preventDefault();
-    setDragOver(null);
-    if (dragIdx.current === null || dragIdx.current === toIdx) return;
-    onReorder(dragIdx.current, toIdx);
+    e.stopPropagation();
+    setDropTarget(null);
+    const from = dragIdx.current;
+    if (from === null || from === toIdx) return;
+    onReorder(from, toIdx);
     dragIdx.current = null;
   };
 
   const onDragEnd = () => {
     dragIdx.current = null;
-    setDragOver(null);
+    setDropTarget(null);
   };
 
   if (blocks.length === 0) {
@@ -66,20 +73,42 @@ export default function ActiveBlocksList({ blocks, onChange, onDelete, onReorder
   return (
     <div className="flex flex-col h-full bg-gray-900 border-r border-gray-800 w-72 flex-shrink-0">
       <PanelHeader count={blocks.length} />
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+      <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
         {blocks.map((block, idx) => (
-          <BlockCard
-            key={block.instanceId}
-            block={block}
-            isDragOver={dragOver === idx}
-            onDragStart={(e) => onDragStart(e, idx)}
-            onDragOver={(e) => onDragOver(e, idx)}
-            onDrop={(e) => onDrop(e, idx)}
-            onDragEnd={onDragEnd}
-            onChange={(vars) => onChange(block.instanceId, vars)}
-            onDelete={() => onDelete(block.instanceId)}
-          />
+          <div key={block.instanceId}>
+            {/* Drop zone indicator above */}
+            {dropTarget === idx && dragIdx.current !== null && dragIdx.current !== idx && dragIdx.current !== idx - 1 && (
+              <div className="h-0.5 bg-indigo-500 rounded-full mx-1 mb-1" />
+            )}
+            <BlockCard
+              block={block}
+              idx={idx}
+              total={blocks.length}
+              isDragOver={dropTarget === idx}
+              onDragStart={(e) => onDragStart(e, idx)}
+              onDragOver={(e) => onDragOver(e, idx)}
+              onDrop={(e) => onDrop(e, idx)}
+              onDragEnd={onDragEnd}
+              onChange={(vars) => onChange(block.instanceId, vars)}
+              onDelete={() => onDelete(block.instanceId)}
+              onMoveUp={() => idx > 0 && onReorder(idx, idx - 1)}
+              onMoveDown={() => idx < blocks.length - 1 && onReorder(idx, idx + 1)}
+            />
+          </div>
         ))}
+        {/* Drop zone at the end */}
+        {dropTarget === blocks.length && (
+          <div className="h-0.5 bg-indigo-500 rounded-full mx-1 mt-1" />
+        )}
+        <div
+          className="h-8"
+          onDragOver={(e) => {
+            if (!e.dataTransfer.types.includes("application/active-block-idx")) return;
+            e.preventDefault();
+            setDropTarget(blocks.length);
+          }}
+          onDrop={(e) => onDrop(e, blocks.length - 1)}
+        />
       </div>
     </div>
   );
@@ -100,16 +129,13 @@ function PanelHeader({ count }: { count: number }) {
 }
 
 function BlockCard({
-  block,
-  isDragOver,
-  onDragStart,
-  onDragOver,
-  onDrop,
-  onDragEnd,
-  onChange,
-  onDelete,
+  block, idx, total, isDragOver,
+  onDragStart, onDragOver, onDrop, onDragEnd,
+  onChange, onDelete, onMoveUp, onMoveDown,
 }: {
   block: ActiveBlock;
+  idx: number;
+  total: number;
   isDragOver: boolean;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
@@ -117,6 +143,8 @@ function BlockCard({
   onDragEnd: () => void;
   onChange: (vars: Record<string, string>) => void;
   onDelete: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 }) {
   const [expanded, setExpanded] = useState(true);
   const varKeys = Object.keys(block.variables);
@@ -130,75 +158,92 @@ function BlockCard({
       onDragEnd={onDragEnd}
       className={`rounded-lg border transition-all ${
         isDragOver
-          ? "border-indigo-500 bg-indigo-950/40 shadow-lg shadow-indigo-900/20"
+          ? "border-indigo-500 bg-indigo-950/30 shadow-md shadow-indigo-900/20"
           : "border-gray-700/60 bg-gray-800/60 hover:border-gray-600"
       }`}
     >
-      {/* Card header */}
-      <div className="flex items-center gap-2 px-2.5 py-2 cursor-pointer select-none" onClick={() => setExpanded((v) => !v)}>
+      {/* Header row */}
+      <div
+        className="flex items-center gap-1.5 px-2 py-2 cursor-pointer select-none"
+        onClick={() => setExpanded(v => !v)}
+      >
+        {/* Drag handle */}
         <GripVertical
           size={13}
           className="text-gray-600 hover:text-gray-400 flex-shrink-0 cursor-grab active:cursor-grabbing"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         />
+
+        {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className={`text-[9px] font-bold uppercase tracking-wider ${TYPE_COLORS[block.type] ?? "text-gray-500"}`}>
-              {block.type}
-            </span>
-          </div>
-          <p className="text-xs font-medium text-gray-200 truncate leading-tight">{block.name}</p>
+          <p className={`text-[9px] font-bold uppercase tracking-wider ${TYPE_COLORS[block.type] ?? "text-gray-500"}`}>
+            {block.type}
+          </p>
+          <p className="text-xs font-medium text-gray-200 truncate">{block.name}</p>
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
+
+        {/* Up / Down */}
+        <div className="flex flex-col gap-0.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
           <button
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="p-1 text-gray-600 hover:text-red-400 transition-colors rounded"
+            onClick={onMoveUp}
+            disabled={idx === 0}
+            className="p-0.5 text-gray-600 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded"
+            title="Posunout nahoru"
           >
-            <Trash2 size={11} />
+            <ChevronUp size={12} />
           </button>
-          {expanded ? (
-            <ChevronDown size={12} className="text-gray-600" />
-          ) : (
-            <ChevronRight size={12} className="text-gray-600" />
-          )}
+          <button
+            onClick={onMoveDown}
+            disabled={idx === total - 1}
+            className="p-0.5 text-gray-600 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded"
+            title="Posunout dolů"
+          >
+            <ChevronDown size={12} />
+          </button>
         </div>
+
+        {/* Delete */}
+        <button
+          onClick={e => { e.stopPropagation(); onDelete(); }}
+          className="p-1 text-gray-600 hover:text-red-400 transition-colors rounded flex-shrink-0"
+        >
+          <Trash2 size={11} />
+        </button>
+
+        {/* Expand toggle */}
+        {expanded ? (
+          <ChevronDown size={12} className="text-gray-600 flex-shrink-0" />
+        ) : (
+          <ChevronRight size={12} className="text-gray-600 flex-shrink-0" />
+        )}
       </div>
 
       {/* Variables */}
-      {expanded && varKeys.length > 0 && (
-        <div className="px-2.5 pb-2.5 space-y-2 border-t border-gray-700/50 pt-2">
-          {varKeys.map((key) => (
-            <VariableField
-              key={key}
-              label={key}
-              value={block.variables[key]}
-              onChange={(val) => onChange({ ...block.variables, [key]: val })}
-            />
-          ))}
-        </div>
-      )}
-
-      {expanded && varKeys.length === 0 && (
-        <div className="px-2.5 pb-2 border-t border-gray-700/50 pt-2">
-          <p className="text-[10px] text-gray-700">Žádné proměnné</p>
+      {expanded && (
+        <div className="border-t border-gray-700/50 px-2.5 pt-2 pb-2.5">
+          {varKeys.length === 0 ? (
+            <p className="text-[10px] text-gray-700">Žádné proměnné</p>
+          ) : (
+            <div className="space-y-2">
+              {varKeys.map(key => (
+                <VariableField
+                  key={key}
+                  label={key}
+                  value={block.variables[key]}
+                  onChange={val => onChange({ ...block.variables, [key]: val })}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function VariableField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  const isUrl = label.includes("url") || label.includes("image");
-  const isLong = label.includes("text") || label.includes("heading") || label.includes("body");
-  const displayLabel = label.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+function VariableField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const isLong = label.includes("text") || label.includes("heading") || label.includes("body") || label.includes("description");
+  const displayLabel = label.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 
   return (
     <div>
@@ -208,16 +253,16 @@ function VariableField({
       {isLong ? (
         <textarea
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           rows={2}
           placeholder={`{{${label}}}`}
           className="w-full bg-gray-900 border border-gray-700 focus:border-indigo-500 rounded-md px-2 py-1.5 text-xs text-white placeholder-gray-700 focus:outline-none transition-colors resize-none"
         />
       ) : (
         <input
-          type={isUrl ? "url" : "text"}
+          type="text"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={e => onChange(e.target.value)}
           placeholder={`{{${label}}}`}
           className="w-full bg-gray-900 border border-gray-700 focus:border-indigo-500 rounded-md px-2 py-1.5 text-xs text-white placeholder-gray-700 focus:outline-none transition-colors"
         />

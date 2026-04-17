@@ -6,25 +6,14 @@
   box-sizing: border-box;
 }
 
-html,
-body {
+html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+}
+
+/* Editor page needs overflow hidden — applied via .editor-root */
+.editor-root {
   overflow: hidden;
-}
-
-#__next,
-main {
-  height: 100%;
-}
-
-.resizer {
-  cursor: col-resize;
-  user-select: none;
-}
-
-.resizer:hover,
-.resizer.active {
-  background-color: #6366f1;
+  height: 100vh;
 }
