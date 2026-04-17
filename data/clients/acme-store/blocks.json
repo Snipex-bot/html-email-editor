@@ -1,0 +1,51 @@
+[
+  {
+    "id": "header-logo",
+    "name": "Header s logem",
+    "type": "header",
+    "description": "Černý header s logem a navigací",
+    "html": "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#111111;\">\n  <tr>\n    <td align=\"center\" style=\"padding:24px 20px;\">\n      <table width=\"600\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"width:600px;max-width:100%;\">\n        <tr>\n          <td align=\"left\" valign=\"middle\" style=\"font-family:Arial,sans-serif;font-size:22px;font-weight:bold;color:#ffffff;letter-spacing:-0.5px;\">\n            {{logo_text}}\n          </td>\n          <td align=\"right\" valign=\"middle\" style=\"font-family:Arial,sans-serif;font-size:13px;color:#aaaaaa;\">\n            <a href=\"{{nav_link_1_url}}\" style=\"color:#ffffff;text-decoration:none;margin-left:20px;\">{{nav_link_1}}</a>\n            <a href=\"{{nav_link_2_url}}\" style=\"color:#ffffff;text-decoration:none;margin-left:20px;\">{{nav_link_2}}</a>\n            <a href=\"{{nav_link_3_url}}\" style=\"color:#ffffff;text-decoration:none;margin-left:20px;\">{{nav_link_3}}</a>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>\n</table>"
+  },
+  {
+    "id": "hero-banner",
+    "name": "Hero banner",
+    "type": "hero",
+    "description": "Velký obrázek s nadpisem a CTA tlačítkem",
+    "html": "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n  <tr>\n    <td align=\"center\" style=\"padding:0;\">\n      <img src=\"{{hero_image_url}}\" alt=\"{{hero_image_alt}}\" width=\"600\" style=\"display:block;width:100%;max-width:600px;\" />\n    </td>\n  </tr>\n  <tr>\n    <td align=\"center\" style=\"background:#ffffff;padding:40px 30px 20px;\">\n      <h1 style=\"font-family:Arial,sans-serif;font-size:30px;font-weight:bold;color:#111111;margin:0 0 12px;line-height:1.2;\">{{heading}}</h1>\n      <p style=\"font-family:Arial,sans-serif;font-size:16px;color:#555555;margin:0 0 28px;line-height:1.6;\">{{subheading}}</p>\n      <a href=\"{{cta_url}}\" style=\"display:inline-block;background:#111111;color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;text-decoration:none;padding:14px 32px;border-radius:4px;\">{{cta_text}}</a>\n    </td>\n  </tr>\n</table>"
+  },
+  {
+    "id": "text-block",
+    "name": "Textový blok",
+    "type": "content",
+    "description": "Jednoduchý odstavec textu",
+    "html": "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#ffffff;\">\n  <tr>\n    <td align=\"center\" style=\"padding:32px 30px;\">\n      <table width=\"600\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:600px;\">\n        <tr>\n          <td style=\"font-family:Arial,sans-serif;font-size:15px;color:#444444;line-height:1.7;\">\n            <h2 style=\"font-size:22px;color:#111111;margin:0 0 14px;\">{{section_heading}}</h2>\n            <p style=\"margin:0;\">{{body_text}}</p>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>\n</table>"
+  },
+  {
+    "id": "product-3col",
+    "name": "Produkty (3 sloupce)",
+    "type": "products",
+    "description": "Tři produkty vedle sebe s obrázkem, názvem a cenou",
+    "html": "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#f8f8f8;\">\n  <tr>\n    <td align=\"center\" style=\"padding:40px 20px;\">\n      <table width=\"600\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:600px;\">\n        <tr>\n          <td align=\"center\" colspan=\"5\" style=\"font-family:Arial,sans-serif;font-size:20px;font-weight:bold;color:#111111;padding-bottom:24px;\">{{section_title}}</td>\n        </tr>\n        <tr>\n          <td width=\"180\" valign=\"top\" align=\"center\" style=\"background:#ffffff;border-radius:6px;padding:16px;\">\n            <img src=\"{{product_1_image}}\" alt=\"{{product_1_name}}\" width=\"148\" style=\"display:block;width:100%;\" />\n            <p style=\"font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#111111;margin:12px 0 4px;\">{{product_1_name}}</p>\n            <p style=\"font-family:Arial,sans-serif;font-size:14px;color:#e53e3e;margin:0 0 10px;\">{{product_1_price}}</p>\n            <a href=\"{{product_1_url}}\" style=\"font-family:Arial,sans-serif;font-size:12px;color:#111111;border:1px solid #111111;padding:6px 14px;text-decoration:none;border-radius:3px;\">Koupit</a>\n          </td>\n          <td width=\"20\"></td>\n          <td width=\"180\" valign=\"top\" align=\"center\" style=\"background:#ffffff;border-radius:6px;padding:16px;\">\n            <img src=\"{{product_2_image}}\" alt=\"{{product_2_name}}\" width=\"148\" style=\"display:block;width:100%;\" />\n            <p style=\"font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#111111;margin:12px 0 4px;\">{{product_2_name}}</p>\n            <p style=\"font-family:Arial,sans-serif;font-size:14px;color:#e53e3e;margin:0 0 10px;\">{{product_2_price}}</p>\n            <a href=\"{{product_2_url}}\" style=\"font-family:Arial,sans-serif;font-size:12px;color:#111111;border:1px solid #111111;padding:6px 14px;text-decoration:none;border-radius:3px;\">Koupit</a>\n          </td>\n          <td width=\"20\"></td>\n          <td width=\"180\" valign=\"top\" align=\"center\" style=\"background:#ffffff;border-radius:6px;padding:16px;\">\n            <img src=\"{{product_3_image}}\" alt=\"{{product_3_name}}\" width=\"148\" style=\"display:block;width:100%;\" />\n            <p style=\"font-family:Arial,sans-serif;font-size:14px;font-weight:bold;color:#111111;margin:12px 0 4px;\">{{product_3_name}}</p>\n            <p style=\"font-family:Arial,sans-serif;font-size:14px;color:#e53e3e;margin:0 0 10px;\">{{product_3_price}}</p>\n            <a href=\"{{product_3_url}}\" style=\"font-family:Arial,sans-serif;font-size:12px;color:#111111;border:1px solid #111111;padding:6px 14px;text-decoration:none;border-radius:3px;\">Koupit</a>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>\n</table>"
+  },
+  {
+    "id": "divider",
+    "name": "Oddělovač",
+    "type": "utility",
+    "description": "Horizontální linka",
+    "html": "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#ffffff;\">\n  <tr>\n    <td style=\"padding:8px 30px;\"><div style=\"height:1px;background:#e5e5e5;\"></div></td>\n  </tr>\n</table>"
+  },
+  {
+    "id": "spacer",
+    "name": "Mezera",
+    "type": "utility",
+    "description": "Prázdný prostor 40px",
+    "html": "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#ffffff;\">\n  <tr><td height=\"40\" style=\"font-size:1px;line-height:1px;\">&nbsp;</td></tr>\n</table>"
+  },
+  {
+    "id": "footer",
+    "name": "Patička",
+    "type": "footer",
+    "description": "Standardní patička s adresou a odhlášením",
+    "html": "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#111111;\">\n  <tr>\n    <td align=\"center\" style=\"padding:32px 20px;\">\n      <table width=\"600\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:600px;\">\n        <tr>\n          <td align=\"center\" style=\"font-family:Arial,sans-serif;font-size:13px;color:#aaaaaa;line-height:1.8;\">\n            <p style=\"margin:0 0 8px;font-weight:bold;color:#ffffff;\">{{company_name}}</p>\n            <p style=\"margin:0 0 16px;\">{{company_address}}</p>\n            <p style=\"margin:0;\">\n              <a href=\"{{unsubscribe_url}}\" style=\"color:#aaaaaa;text-decoration:underline;\">Odhlásit odběr</a>\n              &nbsp;&middot;&nbsp;\n              <a href=\"{{webview_url}}\" style=\"color:#aaaaaa;text-decoration:underline;\">Zobrazit v prohlížeči</a>\n            </p>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>\n</table>"
+  }
+]
