@@ -1,0 +1,227 @@
+"use client";
+
+import { useState, useRef } from "react";
+import { GripVertical, Trash2, ChevronDown, ChevronRight, Layers } from "lucide-react";
+import type { ActiveBlock } from "./types";
+
+const TYPE_COLORS: Record<string, string> = {
+  header:   "text-purple-400",
+  hero:     "text-blue-400",
+  content:  "text-green-400",
+  products: "text-orange-400",
+  footer:   "text-zinc-400",
+  utility:  "text-gray-500",
+};
+
+interface Props {
+  blocks: ActiveBlock[];
+  onChange: (instanceId: string, variables: Record<string, string>) => void;
+  onDelete: (instanceId: string) => void;
+  onReorder: (fromIdx: number, toIdx: number) => void;
+}
+
+export default function ActiveBlocksList({ blocks, onChange, onDelete, onReorder }: Props) {
+  const dragIdx = useRef<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
+
+  const onDragStart = (e: React.DragEvent, idx: number) => {
+    dragIdx.current = idx;
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(idx));
+  };
+
+  const onDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOver(idx);
+  };
+
+  const onDrop = (e: React.DragEvent, toIdx: number) => {
+    e.preventDefault();
+    setDragOver(null);
+    if (dragIdx.current === null || dragIdx.current === toIdx) return;
+    onReorder(dragIdx.current, toIdx);
+    dragIdx.current = null;
+  };
+
+  const onDragEnd = () => {
+    dragIdx.current = null;
+    setDragOver(null);
+  };
+
+  if (blocks.length === 0) {
+    return (
+      <div className="flex flex-col h-full bg-gray-900 border-r border-gray-800 w-72 flex-shrink-0">
+        <PanelHeader count={0} />
+        <div className="flex flex-col items-center justify-center flex-1 gap-3 text-center px-6">
+          <Layers size={28} className="text-gray-700" />
+          <p className="text-xs text-gray-600 leading-relaxed">
+            Klikni nebo přetáhni blok z horní lišty pro přidání do šablony
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-gray-900 border-r border-gray-800 w-72 flex-shrink-0">
+      <PanelHeader count={blocks.length} />
+      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        {blocks.map((block, idx) => (
+          <BlockCard
+            key={block.instanceId}
+            block={block}
+            isDragOver={dragOver === idx}
+            onDragStart={(e) => onDragStart(e, idx)}
+            onDragOver={(e) => onDragOver(e, idx)}
+            onDrop={(e) => onDrop(e, idx)}
+            onDragEnd={onDragEnd}
+            onChange={(vars) => onChange(block.instanceId, vars)}
+            onDelete={() => onDelete(block.instanceId)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PanelHeader({ count }: { count: number }) {
+  return (
+    <div className="flex items-center justify-between px-4 h-8 border-b border-gray-800 flex-shrink-0">
+      <div className="flex items-center gap-1.5">
+        <Layers size={12} className="text-indigo-400" />
+        <span className="text-xs text-gray-400 font-medium">Aktivní bloky</span>
+      </div>
+      {count > 0 && (
+        <span className="text-[10px] bg-gray-800 text-gray-500 px-1.5 py-0.5 rounded-full">{count}</span>
+      )}
+    </div>
+  );
+}
+
+function BlockCard({
+  block,
+  isDragOver,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  onChange,
+  onDelete,
+}: {
+  block: ActiveBlock;
+  isDragOver: boolean;
+  onDragStart: (e: React.DragEvent) => void;
+  onDragOver: (e: React.DragEvent) => void;
+  onDrop: (e: React.DragEvent) => void;
+  onDragEnd: () => void;
+  onChange: (vars: Record<string, string>) => void;
+  onDelete: () => void;
+}) {
+  const [expanded, setExpanded] = useState(true);
+  const varKeys = Object.keys(block.variables);
+
+  return (
+    <div
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
+      className={`rounded-lg border transition-all ${
+        isDragOver
+          ? "border-indigo-500 bg-indigo-950/40 shadow-lg shadow-indigo-900/20"
+          : "border-gray-700/60 bg-gray-800/60 hover:border-gray-600"
+      }`}
+    >
+      {/* Card header */}
+      <div className="flex items-center gap-2 px-2.5 py-2 cursor-pointer select-none" onClick={() => setExpanded((v) => !v)}>
+        <GripVertical
+          size={13}
+          className="text-gray-600 hover:text-gray-400 flex-shrink-0 cursor-grab active:cursor-grabbing"
+          onClick={(e) => e.stopPropagation()}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className={`text-[9px] font-bold uppercase tracking-wider ${TYPE_COLORS[block.type] ?? "text-gray-500"}`}>
+              {block.type}
+            </span>
+          </div>
+          <p className="text-xs font-medium text-gray-200 truncate leading-tight">{block.name}</p>
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="p-1 text-gray-600 hover:text-red-400 transition-colors rounded"
+          >
+            <Trash2 size={11} />
+          </button>
+          {expanded ? (
+            <ChevronDown size={12} className="text-gray-600" />
+          ) : (
+            <ChevronRight size={12} className="text-gray-600" />
+          )}
+        </div>
+      </div>
+
+      {/* Variables */}
+      {expanded && varKeys.length > 0 && (
+        <div className="px-2.5 pb-2.5 space-y-2 border-t border-gray-700/50 pt-2">
+          {varKeys.map((key) => (
+            <VariableField
+              key={key}
+              label={key}
+              value={block.variables[key]}
+              onChange={(val) => onChange({ ...block.variables, [key]: val })}
+            />
+          ))}
+        </div>
+      )}
+
+      {expanded && varKeys.length === 0 && (
+        <div className="px-2.5 pb-2 border-t border-gray-700/50 pt-2">
+          <p className="text-[10px] text-gray-700">Žádné proměnné</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VariableField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const isUrl = label.includes("url") || label.includes("image");
+  const isLong = label.includes("text") || label.includes("heading") || label.includes("body");
+  const displayLabel = label.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  return (
+    <div>
+      <label className="block text-[10px] text-gray-500 mb-1 font-medium truncate" title={`{{${label}}}`}>
+        {displayLabel}
+      </label>
+      {isLong ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={2}
+          placeholder={`{{${label}}}`}
+          className="w-full bg-gray-900 border border-gray-700 focus:border-indigo-500 rounded-md px-2 py-1.5 text-xs text-white placeholder-gray-700 focus:outline-none transition-colors resize-none"
+        />
+      ) : (
+        <input
+          type={isUrl ? "url" : "text"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={`{{${label}}}`}
+          className="w-full bg-gray-900 border border-gray-700 focus:border-indigo-500 rounded-md px-2 py-1.5 text-xs text-white placeholder-gray-700 focus:outline-none transition-colors"
+        />
+      )}
+    </div>
+  );
+}
