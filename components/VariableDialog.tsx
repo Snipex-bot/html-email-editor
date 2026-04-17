@@ -11,7 +11,7 @@ interface Props {
 
 function extractVariables(html: string): string[] {
   const matches = html.match(/\{\{([^}]+)\}\}/g) ?? [];
-  return [...new Set(matches.map((m) => m.slice(2, -2).trim()))];
+  return Array.from(new Set(matches.map((m) => m.slice(2, -2).trim())));
 }
 
 export default function VariableDialog({ html, onConfirm, onCancel }: Props) {
