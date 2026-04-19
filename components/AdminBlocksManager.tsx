@@ -98,7 +98,7 @@ export default function AdminBlocksManager() {
       {/* Nav */}
       <nav className="border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center gap-4">
-          <Link href="/admin" className="flex items-center gap-1.5 text-gray-500 hover:text-white transition-colors text-xs">
+          <Link href="/nastaveni" className="flex items-center gap-1.5 text-gray-500 hover:text-white transition-colors text-xs">
             <ArrowLeft size={13} /> Admin
           </Link>
           <div className="w-px h-4 bg-gray-800" />

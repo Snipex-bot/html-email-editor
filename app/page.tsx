@@ -47,7 +47,7 @@ export default function Home() {
             <span className="font-bold text-white text-sm">Email Tools</span>
           </div>
           <Link
-            href="/admin"
+            href="/nastaveni"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-all border border-gray-700 hover:border-gray-600"
           >
             <Settings size={13} />
@@ -118,7 +118,7 @@ export default function Home() {
 
         {/* Admin card */}
         <div className="mt-6">
-          <Link href="/admin">
+          <Link href="/nastaveni">
             <div className="group flex items-center justify-between p-5 rounded-2xl bg-gray-900 border border-gray-800 hover:border-gray-600 hover:bg-gray-900/80 transition-all cursor-pointer">
               <div className="flex items-center gap-4">
                 <div className="w-9 h-9 rounded-xl bg-gray-800 flex items-center justify-center">

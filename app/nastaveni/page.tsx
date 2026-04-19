@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Layers, Mail, Settings } from "lucide-react";
 
 const adminModules = [
   {
-    href: "/admin/blocks",
+    href: "/nastaveni/blocks",
     icon: Layers,
     label: "Správa bloků",
     description: "Nahrávej, upravuj a mazej HTML bloky pro jednotlivé klienty. Bloky se zobrazují v HTML Email Editoru.",
