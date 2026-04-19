@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Plus, Pencil, Trash2, X, Check, ChevronDown,
-  Layers, Code2, Mail, Eye, EyeOff,
+  Layers, Code2, Mail, Eye, EyeOff, ImageOff, Loader2,
 } from "lucide-react";
 import type { LibraryBlock, Client } from "./types";
 
@@ -33,6 +33,8 @@ export default function AdminBlocksManager() {
   const [clientDropdown, setClientDropdown] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fixing, setFixing] = useState(false);
+  const [fixResult, setFixResult] = useState<string | null>(null);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -100,6 +102,30 @@ export default function AdminBlocksManager() {
   }, [activeClient]);
 
   const currentClient = clients.find(c => c.id === activeClient);
+
+  const handleFixImages = useCallback(async () => {
+    if (!activeClient) return;
+    setFixing(true);
+    setFixResult(null);
+    const res = await fetch("/api/admin/fix-images", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clientId: activeClient }),
+    });
+    const data = await res.json();
+    setFixing(false);
+    if (data.ok) {
+      setFixResult(data.totalReplaced > 0
+        ? `Hotovo — nahrazeno ${data.totalReplaced} base64 obrázků`
+        : "Žádné base64 obrázky nenalezeny");
+      // reload blocks to show updated HTML
+      const updated: LibraryBlock[] = await fetch(`/api/blocks?clientId=${activeClient}`).then(r => r.json());
+      setBlocks(updated);
+    } else {
+      setFixResult(`Chyba: ${data.error}`);
+    }
+    setTimeout(() => setFixResult(null), 5000);
+  }, [activeClient]);
 
   return (
     <div className="min-h-full bg-gray-950">
@@ -174,12 +200,28 @@ export default function AdminBlocksManager() {
               <p className="text-xs text-gray-600 mt-0.5">{blocks.length} bloků</p>
             </div>
             {activeClient && (
-              <button
-                onClick={openAdd}
-                className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition-all shadow"
-              >
-                <Plus size={14} /> Přidat blok
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleFixImages}
+                  disabled={fixing}
+                  title="Nahrát base64 obrázky do Supabase Storage a nahradit je krátkými URL"
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 rounded-xl transition-all disabled:opacity-50"
+                >
+                  {fixing ? <Loader2 size={12} className="animate-spin" /> : <ImageOff size={12} />}
+                  {fixing ? "Zpracovávám…" : "Zkrátit obrázky"}
+                </button>
+                <button
+                  onClick={openAdd}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition-all shadow"
+                >
+                  <Plus size={14} /> Přidat blok
+                </button>
+              </div>
+            )}
+            {fixResult && (
+              <p className={`text-xs mt-2 ${fixResult.startsWith("Chyba") ? "text-red-400" : "text-emerald-400"}`}>
+                {fixResult}
+              </p>
             )}
           </div>
 
