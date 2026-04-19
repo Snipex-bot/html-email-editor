@@ -243,22 +243,36 @@ function BlockCard({
 }
 
 const RICH_KEYS = ["text", "heading", "subheading", "body", "description", "quote", "name", "title", "subject"];
-const IMAGE_KEYS = ["image", "img", "foto", "photo", "picture", "banner", "thumbnail"];
+const IMAGE_SUFFIXES = ["_image", "_img", "_foto", "_photo", "_src", "_thumbnail", "_picture"];
+const IMAGE_EXACT = ["image", "img", "foto", "photo", "src"];
 
 function VariableField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   const lower = label.toLowerCase();
   const isRich = RICH_KEYS.some(k => lower.includes(k));
-  const isImage = IMAGE_KEYS.some(k => lower.includes(k));
-  const isUrl = !isImage && (label.includes("url") || label.includes("src"));
+  const isImage = IMAGE_SUFFIXES.some(k => lower.includes(k)) || IMAGE_EXACT.includes(lower);
+  const isUrl = !isImage && (lower.includes("url") || lower.includes("link"));
   const displayLabel = label.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => onChange(reader.result as string);
-    reader.readAsDataURL(file);
     e.target.value = "";
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (res.ok) {
+        onChange((await res.json()).url);
+        setUploading(false);
+        return;
+      }
+    } catch {}
+    const reader = new FileReader();
+    reader.onload = () => { onChange(reader.result as string); setUploading(false); };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -279,9 +293,9 @@ function VariableField({ label, value, onChange }: { label: string; value: strin
             <img src={value} alt="" className="w-full h-16 object-cover rounded border border-gray-700" />
           )}
           <div className="flex gap-1">
-            <label className="flex items-center gap-1 px-2 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded text-[10px] text-white cursor-pointer transition-colors flex-shrink-0">
-              <ImagePlus size={10} /> Vložit
-              <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
+            <label className={`flex items-center gap-1 px-2 py-1.5 rounded text-[10px] text-white cursor-pointer transition-colors flex-shrink-0 ${uploading ? "bg-indigo-700 opacity-60 pointer-events-none" : "bg-indigo-600 hover:bg-indigo-500"}`}>
+              <ImagePlus size={10} /> {uploading ? "…" : "Vložit"}
+              <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={uploading} />
             </label>
             <input
               type="url"

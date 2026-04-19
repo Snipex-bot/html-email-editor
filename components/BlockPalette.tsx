@@ -16,9 +16,10 @@ const TYPE_COLORS: Record<string, string> = {
 interface Props {
   onAddBlock: (block: LibraryBlock) => void;
   initialClientId?: string;
+  lockClient?: boolean;
 }
 
-export default function BlockPalette({ onAddBlock, initialClientId }: Props) {
+export default function BlockPalette({ onAddBlock, initialClientId, lockClient }: Props) {
   const [clients, setClients] = useState<Client[]>([]);
   const [activeClient, setActiveClient] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<LibraryBlock[]>([]);
@@ -82,56 +83,62 @@ export default function BlockPalette({ onAddBlock, initialClientId }: Props) {
     <div className="flex items-center gap-3 px-4 h-16 bg-gray-900 border-b border-gray-800 flex-shrink-0">
       {/* Client selector */}
       <div className="relative flex-shrink-0">
-        <button
-          onClick={() => setClientOpen((o) => !o)}
-          className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-lg text-xs text-white transition-colors min-w-[130px]"
-        >
-          <div
-            className="w-2 h-2 rounded-full flex-shrink-0"
-            style={{ background: currentClient?.color ?? "#6b7280" }}
-          />
-          <span className="truncate font-medium">{currentClient?.name ?? "Klient"}</span>
-          <ChevronDown size={11} className={`flex-shrink-0 text-gray-500 transition-transform ml-auto ${clientOpen ? "rotate-180" : ""}`} />
-        </button>
-
-        {clientOpen && (
-          <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-30 min-w-[160px] overflow-hidden">
-            {clients.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => { setActiveClient(c.id); setClientOpen(false); }}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-gray-700 transition-colors text-left ${c.id === activeClient ? "text-white" : "text-gray-400"}`}
-              >
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c.color }} />
-                {c.name}
-              </button>
-            ))}
-            <div className="border-t border-gray-700">
-              {showNewClient ? (
-                <div className="flex gap-1 p-2">
-                  <input
-                    autoFocus
-                    type="text"
-                    value={newClientName}
-                    onChange={(e) => setNewClientName(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleAddClient(); if (e.key === "Escape") setShowNewClient(false); }}
-                    placeholder="Název klienta…"
-                    className="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 min-w-0"
-                  />
-                  <button onClick={handleAddClient} className="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-white transition-colors">
-                    <Plus size={11} />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowNewClient(true)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-500 hover:text-white hover:bg-gray-700 transition-colors"
-                >
-                  <Plus size={11} /> Přidat klienta
-                </button>
-              )}
-            </div>
+        {lockClient ? (
+          <div className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border border-gray-700/50 rounded-lg text-xs text-gray-300 min-w-[130px]">
+            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: currentClient?.color ?? "#6b7280" }} />
+            <span className="truncate font-medium">{currentClient?.name ?? "Klient"}</span>
           </div>
+        ) : (
+          <>
+            <button
+              onClick={() => setClientOpen((o) => !o)}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-lg text-xs text-white transition-colors min-w-[130px]"
+            >
+              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: currentClient?.color ?? "#6b7280" }} />
+              <span className="truncate font-medium">{currentClient?.name ?? "Klient"}</span>
+              <ChevronDown size={11} className={`flex-shrink-0 text-gray-500 transition-transform ml-auto ${clientOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {clientOpen && (
+              <div className="absolute top-full left-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-30 min-w-[160px] overflow-hidden">
+                {clients.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => { setActiveClient(c.id); setClientOpen(false); }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-gray-700 transition-colors text-left ${c.id === activeClient ? "text-white" : "text-gray-400"}`}
+                  >
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c.color }} />
+                    {c.name}
+                  </button>
+                ))}
+                <div className="border-t border-gray-700">
+                  {showNewClient ? (
+                    <div className="flex gap-1 p-2">
+                      <input
+                        autoFocus
+                        type="text"
+                        value={newClientName}
+                        onChange={(e) => setNewClientName(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") handleAddClient(); if (e.key === "Escape") setShowNewClient(false); }}
+                        placeholder="Název klienta…"
+                        className="flex-1 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 min-w-0"
+                      />
+                      <button onClick={handleAddClient} className="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 rounded text-white transition-colors">
+                        <Plus size={11} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowNewClient(true)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-500 hover:text-white hover:bg-gray-700 transition-colors"
+                    >
+                      <Plus size={11} /> Přidat klienta
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

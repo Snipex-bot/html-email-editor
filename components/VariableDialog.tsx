@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { X, Wand2, ImagePlus } from "lucide-react";
 
-const IMAGE_KEYS = ["image", "img", "foto", "photo", "picture", "banner", "thumbnail"];
+const IMAGE_SUFFIXES = ["_image", "_img", "_foto", "_photo", "_src", "_thumbnail", "_picture"];
+const IMAGE_EXACT = ["image", "img", "foto", "photo", "src"];
 
 interface Props {
   html: string;
@@ -53,14 +54,21 @@ export default function VariableDialog({ html, onConfirm, onCancel }: Props) {
 
         <div className="p-5 space-y-3 max-h-[60vh] overflow-y-auto">
           {variables.map((v) => {
-            const isImage = IMAGE_KEYS.some(k => v.toLowerCase().includes(k));
-            const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const vl = v.toLowerCase();
+            const isImage = IMAGE_SUFFIXES.some(k => vl.includes(k)) || IMAGE_EXACT.includes(vl);
+            const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
               const file = e.target.files?.[0];
               if (!file) return;
+              e.target.value = "";
+              try {
+                const fd = new FormData();
+                fd.append("file", file);
+                const res = await fetch("/api/upload", { method: "POST", body: fd });
+                if (res.ok) { setValues(prev => ({ ...prev, [v]: (await res.json()).url })); return; }
+              } catch {}
               const reader = new FileReader();
               reader.onload = () => setValues(prev => ({ ...prev, [v]: reader.result as string }));
               reader.readAsDataURL(file);
-              e.target.value = "";
             };
             return (
               <div key={v}>

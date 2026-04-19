@@ -91,7 +91,9 @@ export default function NewsletterEditor({ newsletterId }: Props) {
   const [splitPct, setSplitPct] = useState(50);
   const [previewWidth, setPreviewWidth] = useState(600);
   const [previewContainerW, setPreviewContainerW] = useState(0);
+  const [iframeContentH, setIframeContentH] = useState(800);
   const previewContainerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [pendingBlock, setPendingBlock] = useState<LibraryBlock | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -281,11 +283,26 @@ export default function NewsletterEditor({ newsletterId }: Props) {
     setCopied(true); setTimeout(() => setCopied(false), 2000);
   }, [html]);
 
-  const handlePreviewNewTab = useCallback(() => {
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-  }, [html]);
+  const handleIframeLoad = useCallback(() => {
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc) return;
+    const h = doc.documentElement.scrollHeight || doc.body?.scrollHeight || 800;
+    if (h > 100) setIframeContentH(h + 32);
+  }, []);
+
+  const handlePreviewNewTab = useCallback(async () => {
+    setSaving(true);
+    await fetch("/api/newsletters", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: newsletterId, name: newsletterName, blocks: activeBlocks }),
+    });
+    localStorage.removeItem(DRAFT_KEY(newsletterId));
+    setHasDraft(false);
+    setSavedAt(new Date());
+    setSaving(false);
+    window.open(`/preview/${newsletterId}`, "_blank");
+  }, [newsletterId, newsletterName, activeBlocks]);
 
   if (loading) {
     return (
@@ -384,7 +401,7 @@ export default function NewsletterEditor({ newsletterId }: Props) {
       </header>
 
       {/* ── BLOCK PALETTE ───────────────────────────── */}
-      <BlockPalette onAddBlock={handleAddBlock} initialClientId={clientId ?? undefined} />
+      <BlockPalette onAddBlock={handleAddBlock} initialClientId={clientId ?? undefined} lockClient={!!clientId} />
 
       {/* ── MAIN ────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
@@ -471,14 +488,18 @@ export default function NewsletterEditor({ newsletterId }: Props) {
                 const scale = previewContainerW > 0 && previewWidth > previewContainerW - pad
                   ? (previewContainerW - pad) / previewWidth
                   : 1;
-                const iframeH = 800;
-                const scaledH = Math.round(iframeH * scale);
+                const scaledH = Math.round(iframeContentH * scale);
                 return (
-                  <div ref={previewContainerRef} className="flex-1 overflow-hidden flex justify-center pt-4 pb-4 bg-gray-200">
+                  <div ref={previewContainerRef} className="flex-1 min-h-0 overflow-y-auto flex justify-center pt-4 pb-4 bg-gray-200">
                     <div style={{ width: previewWidth * scale, height: scaledH, flexShrink: 0 }}>
                       <div style={{ width: previewWidth, transformOrigin: "top left", transform: `scale(${scale})` }}>
-                        <iframe srcDoc={html} title="Preview" sandbox="allow-same-origin"
-                          style={{ width: "100%", height: iframeH, display: "block", border: 0 }}
+                        <iframe
+                          ref={iframeRef}
+                          srcDoc={html}
+                          title="Preview"
+                          sandbox="allow-same-origin"
+                          onLoad={handleIframeLoad}
+                          style={{ width: "100%", height: iframeContentH, display: "block", border: 0 }}
                         />
                       </div>
                     </div>
