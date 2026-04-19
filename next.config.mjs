@@ -4,6 +4,7 @@ const nextConfig = {
     outputFileTracingIncludes: {
       "/api/clients": ["./data/**/*"],
       "/api/blocks": ["./data/**/*"],
+      "/api/newsletters": ["./data/**/*"],
     },
   },
 };

@@ -15,9 +15,10 @@ const TYPE_COLORS: Record<string, string> = {
 
 interface Props {
   onAddBlock: (block: LibraryBlock) => void;
+  initialClientId?: string;
 }
 
-export default function BlockPalette({ onAddBlock }: Props) {
+export default function BlockPalette({ onAddBlock, initialClientId }: Props) {
   const [clients, setClients] = useState<Client[]>([]);
   const [activeClient, setActiveClient] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<LibraryBlock[]>([]);
@@ -32,7 +33,8 @@ export default function BlockPalette({ onAddBlock }: Props) {
       .then((r) => r.json())
       .then((data: Client[]) => {
         setClients(data);
-        if (data.length > 0) setActiveClient(data[0].id);
+        const preferred = initialClientId && data.find((c: Client) => c.id === initialClientId);
+        setActiveClient(preferred ? preferred.id : data[0]?.id ?? null);
       });
   }, []);
 

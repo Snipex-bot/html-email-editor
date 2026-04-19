@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic";
 
-import EmailEditor from "@/components/EmailEditor";
+import NewsletterList from "@/components/NewsletterList";
 
-export const metadata = { title: "HTML Email Editor" };
+export const metadata = { title: "Newsletter Editor" };
 
 export default function EditorPage() {
-  return <EmailEditor />;
+  return <NewsletterList />;
 }

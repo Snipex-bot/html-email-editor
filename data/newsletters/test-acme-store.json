@@ -1,0 +1,49 @@
+{
+  "id": "test-acme-store",
+  "name": "Test Newsletter — Duben 2026",
+  "clientId": "acme-store",
+  "createdAt": "2026-04-19T08:00:00.000Z",
+  "updatedAt": "2026-04-19T08:00:00.000Z",
+  "blocks": [
+    {
+      "instanceId": "header-logo-1",
+      "blockId": "header-logo",
+      "name": "Header s logem",
+      "type": "header",
+      "rawTemplate": "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#111111;\">\n  <tr>\n    <td align=\"center\" style=\"padding:24px 20px;\">\n      <table width=\"600\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"width:600px;max-width:100%;\">\n        <tr>\n          <td align=\"left\" valign=\"middle\" style=\"font-family:Arial,sans-serif;font-size:22px;font-weight:bold;color:#ffffff;letter-spacing:-0.5px;\">\n            {{logo_text}}\n          </td>\n          <td align=\"right\" valign=\"middle\" style=\"font-family:Arial,sans-serif;font-size:13px;color:#aaaaaa;\">\n            <a href=\"{{nav_link_1_url}}\" style=\"color:#ffffff;text-decoration:none;margin-left:20px;\">{{nav_link_1}}</a>\n            <a href=\"{{nav_link_2_url}}\" style=\"color:#ffffff;text-decoration:none;margin-left:20px;\">{{nav_link_2}}</a>\n            <a href=\"{{nav_link_3_url}}\" style=\"color:#ffffff;text-decoration:none;margin-left:20px;\">{{nav_link_3}}</a>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>\n</table>",
+      "variables": {
+        "logo_text": "Acme Store",
+        "nav_link_1_url": "#",
+        "nav_link_1": "Novinky",
+        "nav_link_2_url": "#",
+        "nav_link_2": "Výprodej",
+        "nav_link_3_url": "#",
+        "nav_link_3": "Kontakt"
+      }
+    },
+    {
+      "instanceId": "text-block-1",
+      "blockId": "text-block",
+      "name": "Textový blok",
+      "type": "content",
+      "rawTemplate": "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#ffffff;\">\n  <tr>\n    <td align=\"center\" style=\"padding:32px 30px;\">\n      <table width=\"600\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:600px;\">\n        <tr>\n          <td style=\"font-family:Arial,sans-serif;font-size:15px;color:#444444;line-height:1.7;\">\n            <h2 style=\"font-size:22px;color:#111111;margin:0 0 14px;\">{{section_heading}}</h2>\n            <p style=\"margin:0;\">{{body_text}}</p>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>\n</table>",
+      "variables": {
+        "section_heading": "Vítejte v dubnovém vydání!",
+        "body_text": "Děkujeme, že jste součástí naší komunity. Tento měsíc pro vás máme spoustu zajímavých novinek a speciálních nabídek."
+      }
+    },
+    {
+      "instanceId": "footer-1",
+      "blockId": "footer",
+      "name": "Patička",
+      "type": "footer",
+      "rawTemplate": "<table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#111111;\">\n  <tr>\n    <td align=\"center\" style=\"padding:32px 20px;\">\n      <table width=\"600\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:600px;\">\n        <tr>\n          <td align=\"center\" style=\"font-family:Arial,sans-serif;font-size:13px;color:#aaaaaa;line-height:1.8;\">\n            <p style=\"margin:0 0 8px;font-weight:bold;color:#ffffff;\">{{company_name}}</p>\n            <p style=\"margin:0 0 16px;\">{{company_address}}</p>\n            <p style=\"margin:0;\">\n              <a href=\"{{unsubscribe_url}}\" style=\"color:#aaaaaa;text-decoration:underline;\">Odhlásit odběr</a>\n              &nbsp;&middot;&nbsp;\n              <a href=\"{{webview_url}}\" style=\"color:#aaaaaa;text-decoration:underline;\">Zobrazit v prohlížeči</a>\n            </p>\n          </td>\n        </tr>\n      </table>\n    </td>\n  </tr>\n</table>",
+      "variables": {
+        "company_name": "Acme Store s.r.o.",
+        "company_address": "Příkladná 123, 110 00 Praha 1",
+        "unsubscribe_url": "#",
+        "webview_url": "#"
+      }
+    }
+  ]
+}
