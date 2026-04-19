@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Bold, Italic, Underline, Link as LinkIcon, X } from "lucide-react";
+import { Bold, Italic, Underline, Link as LinkIcon, X, type LucideIcon } from "lucide-react";
 
 interface Props {
   value: string;
@@ -132,7 +132,7 @@ export default function RichTextField({ value, onChange, placeholder = "", rows 
   );
 }
 
-function ToolBtn({ icon: Icon, title, onClick }: { icon: React.FC<{ size?: number }>, title: string, onClick: () => void }) {
+function ToolBtn({ icon: Icon, title, onClick }: { icon: LucideIcon, title: string, onClick: () => void }) {
   return (
     <button
       type="button"
