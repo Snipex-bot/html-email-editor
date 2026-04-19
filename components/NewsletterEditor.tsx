@@ -165,7 +165,6 @@ export default function NewsletterEditor({ newsletterId }: Props) {
       body: JSON.stringify({ id: newsletterId, name: newsletterName, blocks: activeBlocks }),
     });
     localStorage.removeItem(DRAFT_KEY(newsletterId));
-    try { localStorage.setItem(`preview:${newsletterId}`, html); } catch {}
     setHasDraft(false);
     setSavedAt(new Date());
     setSaving(false);
@@ -299,11 +298,10 @@ export default function NewsletterEditor({ newsletterId }: Props) {
       body: JSON.stringify({ id: newsletterId, name: newsletterName, blocks: activeBlocks }),
     });
     localStorage.removeItem(DRAFT_KEY(newsletterId));
-    try { localStorage.setItem(`preview:${newsletterId}`, html); } catch {}
     setHasDraft(false);
     setSavedAt(new Date());
     setSaving(false);
-    window.open(`/preview/${newsletterId}`, "_blank");
+    window.open(`/preview/${newsletterId}?t=${Date.now()}`, "_blank");
   }, [newsletterId, newsletterName, activeBlocks, html]);
 
   if (loading) {
@@ -409,6 +407,7 @@ export default function NewsletterEditor({ newsletterId }: Props) {
       <div className="flex flex-1 overflow-hidden">
         <ActiveBlocksList
           blocks={activeBlocks}
+          clientId={clientId ?? undefined}
           onChange={handleUpdateBlock}
           onDelete={handleDeleteBlock}
           onReorder={handleReorder}
@@ -537,7 +536,7 @@ function HtmlSize({ html }: { html: string }) {
     return bytes < 1024
       ? `${bytes} B`
       : bytes < 1024 * 1024
-      ? `${(bytes / 1024).toFixed(1)} KB`
+      ? `${(bytes / 1024).toFixed(1)} kB`
       : `${(bytes / 1024 / 1024).toFixed(2)} MB`;
   }, [html]);
   return <span className="text-xs text-indigo-200 opacity-60">{label}</span>;

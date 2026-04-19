@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Layers, Mail, Settings } from "lucide-react";
+import { ArrowLeft, ArrowRight, Layers, Mail, Settings, Globe } from "lucide-react";
 
 const adminModules = [
   {
@@ -12,6 +12,15 @@ const adminModules = [
     label: "Správa bloků",
     description: "Nahrávej, upravuj a mazej HTML bloky pro jednotlivé klienty. Bloky se zobrazují v HTML Email Editoru.",
     color: "from-indigo-500 to-purple-600",
+    tool: "HTML Email Editor",
+    toolHref: "/editor",
+  },
+  {
+    href: "/nastaveni/scraping",
+    icon: Globe,
+    label: "Scraping produktů",
+    description: "Nakonfiguruj CSS selektory pro automatické načítání produktových informací z e-shopů. Každý klient má vlastní konfiguraci.",
+    color: "from-emerald-500 to-teal-600",
     tool: "HTML Email Editor",
     toolHref: "/editor",
   },

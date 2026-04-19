@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { GripVertical, Trash2, ChevronDown, ChevronRight, Layers, ChevronUp, ImagePlus } from "lucide-react";
+import { GripVertical, Trash2, ChevronDown, ChevronRight, Layers, ChevronUp, ImagePlus, Download, Loader2, XCircle } from "lucide-react";
 import type { ActiveBlock } from "./types";
 import RichTextField from "./RichTextField";
 
@@ -16,12 +16,13 @@ const TYPE_COLORS: Record<string, string> = {
 
 interface Props {
   blocks: ActiveBlock[];
+  clientId?: string;
   onChange: (instanceId: string, variables: Record<string, string>) => void;
   onDelete: (instanceId: string) => void;
   onReorder: (fromIdx: number, toIdx: number) => void;
 }
 
-export default function ActiveBlocksList({ blocks, onChange, onDelete, onReorder }: Props) {
+export default function ActiveBlocksList({ blocks, clientId, onChange, onDelete, onReorder }: Props) {
   const dragIdx = useRef<number | null>(null);
   const [dropTarget, setDropTarget] = useState<number | null>(null);
 
@@ -85,6 +86,7 @@ export default function ActiveBlocksList({ blocks, onChange, onDelete, onReorder
               block={block}
               idx={idx}
               total={blocks.length}
+              clientId={clientId}
               isDragOver={dropTarget === idx}
               onDragStart={(e) => onDragStart(e, idx)}
               onDragOver={(e) => onDragOver(e, idx)}
@@ -129,14 +131,43 @@ function PanelHeader({ count }: { count: number }) {
   );
 }
 
+// maps canonical scrape keys → variable name substrings to match
+const SCRAPE_KEY_MAP: Record<string, string[]> = {
+  name:        ["name", "title", "nazev", "produkt", "jmeno"],
+  price:       ["price", "cena", "kc", "czk"],
+  image:       ["image", "img", "foto", "photo", "src", "picture", "thumbnail"],
+  description: ["description", "desc", "popis", "text", "body"],
+  brand:       ["brand", "znacka", "vyrobce"],
+  url:         ["url", "link", "href"],
+};
+
+function applyScrapedData(
+  vars: Record<string, string>,
+  scraped: Record<string, string>
+): Record<string, string> {
+  const updated = { ...vars };
+  for (const [scrapeKey, substrings] of Object.entries(SCRAPE_KEY_MAP)) {
+    const scrapedVal = scraped[scrapeKey];
+    if (!scrapedVal) continue;
+    for (const varKey of Object.keys(updated)) {
+      const lower = varKey.toLowerCase();
+      if (substrings.some((s) => lower.includes(s))) {
+        updated[varKey] = scrapedVal;
+      }
+    }
+  }
+  return updated;
+}
+
 function BlockCard({
-  block, idx, total, isDragOver,
+  block, idx, total, clientId, isDragOver,
   onDragStart, onDragOver, onDrop, onDragEnd,
   onChange, onDelete, onMoveUp, onMoveDown,
 }: {
   block: ActiveBlock;
   idx: number;
   total: number;
+  clientId?: string;
   isDragOver: boolean;
   onDragStart: (e: React.DragEvent) => void;
   onDragOver: (e: React.DragEvent) => void;
@@ -148,7 +179,32 @@ function BlockCard({
   onMoveDown: () => void;
 }) {
   const [expanded, setExpanded] = useState(true);
+  const [scrapeUrl, setScrapeUrl] = useState("");
+  const [scraping, setScraping] = useState(false);
+  const [scrapeError, setScrapeError] = useState("");
   const varKeys = Object.keys(block.variables);
+
+  const isProductBlock = block.type === "products";
+
+  const handleScrape = async () => {
+    if (!scrapeUrl.trim()) return;
+    setScraping(true);
+    setScrapeError("");
+    try {
+      const res = await fetch("/api/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: scrapeUrl.trim(), clientId }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setScrapeError(data.error ?? "Chyba"); }
+      else { onChange(applyScrapedData(block.variables, data)); }
+    } catch (err) {
+      setScrapeError(String(err));
+    } finally {
+      setScraping(false);
+    }
+  };
 
   return (
     <div
@@ -221,7 +277,38 @@ function BlockCard({
 
       {/* Variables */}
       {expanded && (
-        <div className="border-t border-gray-700/50 px-2.5 pt-2 pb-2.5">
+        <div className="border-t border-gray-700/50 px-2.5 pt-2 pb-2.5 space-y-2">
+          {/* Scrape row — only for product blocks */}
+          {isProductBlock && (
+            <div className="pb-1.5 border-b border-gray-700/40 space-y-1.5">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-orange-400/70">Načíst z webu</p>
+              <div className="flex gap-1">
+                <input
+                  type="url"
+                  value={scrapeUrl}
+                  onChange={e => { setScrapeUrl(e.target.value); setScrapeError(""); }}
+                  onKeyDown={e => e.key === "Enter" && handleScrape()}
+                  placeholder="URL produktu…"
+                  className="flex-1 min-w-0 bg-gray-900 border border-gray-700 focus:border-orange-500 rounded-md px-2 py-1.5 text-xs text-white placeholder-gray-700 focus:outline-none transition-colors"
+                />
+                <button
+                  onClick={handleScrape}
+                  disabled={scraping || !scrapeUrl.trim()}
+                  title="Načíst informace o produktu"
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-semibold bg-orange-600/80 hover:bg-orange-500 disabled:opacity-40 text-white transition-all flex-shrink-0"
+                >
+                  {scraping ? <Loader2 size={10} className="animate-spin" /> : <Download size={10} />}
+                  {scraping ? "…" : "Načíst"}
+                </button>
+              </div>
+              {scrapeError && (
+                <div className="flex items-center gap-1 text-[9px] text-red-400">
+                  <XCircle size={9} /> {scrapeError}
+                </div>
+              )}
+            </div>
+          )}
+
           {varKeys.length === 0 ? (
             <p className="text-[10px] text-gray-700">Žádné proměnné</p>
           ) : (

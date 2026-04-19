@@ -16,3 +16,16 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }
+
+export async function PUT(req: Request) {
+  const { id, scraping_config } = await req.json();
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  const { data, error } = await supabase
+    .from("clients")
+    .update({ scraping_config })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
+}
