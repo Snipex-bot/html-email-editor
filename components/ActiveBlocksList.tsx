@@ -231,6 +231,7 @@ function BlockCard({
                   key={key}
                   label={key}
                   value={block.variables[key]}
+                  rawTemplate={block.rawTemplate}
                   onChange={val => onChange({ ...block.variables, [key]: val })}
                 />
               ))}
@@ -246,7 +247,18 @@ const RICH_KEYS = ["text", "heading", "subheading", "body", "description", "quot
 const IMAGE_SUFFIXES = ["_image", "_img", "_foto", "_photo", "_src", "_thumbnail", "_picture"];
 const IMAGE_EXACT = ["image", "img", "foto", "photo", "src"];
 
-function VariableField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function parseImgDims(template: string, varName: string): { w: string; h: string } | null {
+  const tags = template.match(/<img[^>]+>/gi) ?? [];
+  for (const tag of tags) {
+    if (!tag.includes(`{{${varName}}}`)) continue;
+    const w = /\bwidth=["']?(\d+)["']?/i.exec(tag)?.[1] ?? /width:\s*(\d+)px/i.exec(tag)?.[1];
+    const h = /\bheight=["']?(\d+)["']?/i.exec(tag)?.[1] ?? /height:\s*(\d+)px/i.exec(tag)?.[1];
+    if (w || h) return { w: w ?? "?", h: h ?? "?" };
+  }
+  return null;
+}
+
+function VariableField({ label, value, rawTemplate, onChange }: { label: string; value: string; rawTemplate?: string; onChange: (v: string) => void }) {
   const lower = label.toLowerCase();
   const isRich = RICH_KEYS.some(k => lower.includes(k));
   const isImage = IMAGE_SUFFIXES.some(k => lower.includes(k)) || IMAGE_EXACT.includes(lower);
@@ -289,6 +301,15 @@ function VariableField({ label, value, onChange }: { label: string; value: strin
         />
       ) : isImage ? (
         <div className="space-y-1.5">
+          {rawTemplate && (() => {
+            const dims = parseImgDims(rawTemplate, label);
+            if (!dims) return null;
+            return (
+              <p className="text-[9px] text-gray-600 font-mono">
+                {dims.w}×{dims.h} px
+              </p>
+            );
+          })()}
           {value && (
             <img src={value} alt="" className="w-full h-16 object-cover rounded border border-gray-700" />
           )}

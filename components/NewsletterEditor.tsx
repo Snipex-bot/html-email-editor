@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
@@ -516,6 +516,7 @@ export default function NewsletterEditor({ newsletterId }: Props) {
         <span className="text-xs text-indigo-200 opacity-80">
           {activeBlocks.length} {activeBlocks.length === 1 ? "blok" : activeBlocks.length < 5 ? "bloky" : "bloků"}
         </span>
+        <HtmlSize html={html} />
         <span className="text-xs text-indigo-200 opacity-70">
           {savedAt ? `Uloženo ${savedAt.toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })}` : "Neuloženo"}
         </span>
@@ -526,4 +527,16 @@ export default function NewsletterEditor({ newsletterId }: Props) {
       )}
     </div>
   );
+}
+
+function HtmlSize({ html }: { html: string }) {
+  const label = useMemo(() => {
+    const bytes = new Blob([html]).size;
+    return bytes < 1024
+      ? `${bytes} B`
+      : bytes < 1024 * 1024
+      ? `${(bytes / 1024).toFixed(1)} KB`
+      : `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+  }, [html]);
+  return <span className="text-xs text-indigo-200 opacity-60">{label}</span>;
 }
