@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, Layers, Mail, Settings, Globe } from "lucide-react";
+import { ArrowLeft, ArrowRight, Layers, Mail, Settings, Globe, Image } from "lucide-react";
 
 const adminModules = [
   {
@@ -21,6 +21,15 @@ const adminModules = [
     label: "Scraping produktů",
     description: "Nakonfiguruj CSS selektory pro automatické načítání produktových informací z e-shopů. Každý klient má vlastní konfiguraci.",
     color: "from-emerald-500 to-teal-600",
+    tool: "HTML Email Editor",
+    toolHref: "/editor",
+  },
+  {
+    href: "/nastaveni/images",
+    icon: Image,
+    label: "Galerie obrázků",
+    description: "Přehled všech nahraných obrázků per klient. Nahrávej nové, kopíruj URL nebo maž nepoužívané.",
+    color: "from-pink-500 to-rose-600",
     tool: "HTML Email Editor",
     toolHref: "/editor",
   },

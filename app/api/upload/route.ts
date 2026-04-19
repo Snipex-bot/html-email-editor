@@ -4,10 +4,12 @@ import { supabase } from "@/lib/supabase";
 export async function POST(req: Request) {
   const form = await req.formData();
   const file = form.get("file") as File | null;
+  const clientId = form.get("clientId") as string | null;
   if (!file) return NextResponse.json({ error: "Chybí soubor" }, { status: 400 });
 
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const path = `uploads/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const folder = clientId ? `uploads/${clientId}` : "uploads";
+  const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error } = await supabase.storage.from("images").upload(path, buffer, {
@@ -18,5 +20,5 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const { data } = supabase.storage.from("images").getPublicUrl(path);
-  return NextResponse.json({ url: data.publicUrl });
+  return NextResponse.json({ url: data.publicUrl, path });
 }

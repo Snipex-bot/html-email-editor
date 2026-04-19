@@ -74,13 +74,37 @@ export default function AdminBlocksManager() {
     setShowForm(true);
   };
 
+  const uploadBase64InHtml = useCallback(async (html: string): Promise<string> => {
+    const base64Re = /src="(data:image\/([^;]+);base64,([^"]+))"/g;
+    const matches = [...html.matchAll(base64Re)];
+    if (matches.length === 0) return html;
+    let result = html;
+    for (const [fullMatch, , mimeType, base64Data] of matches) {
+      try {
+        const binary = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+        const ext = mimeType.replace("jpeg", "jpg");
+        const file = new File([binary], `image.${ext}`, { type: `image/${mimeType}` });
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("clientId", activeClient!);
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        if (res.ok) {
+          const { url } = await res.json();
+          result = result.replace(fullMatch, `src="${url}"`);
+        }
+      } catch { /* keep original */ }
+    }
+    return result;
+  }, [activeClient]);
+
   const handleSave = useCallback(async () => {
     if (!activeClient || !form.name || !form.html) return;
     setSaving(true);
     const isEdit = !!editingBlock;
+    const cleanHtml = await uploadBase64InHtml(form.html);
     const blockData = isEdit
-      ? { ...form, id: editingBlock.id }
-      : { ...form, id: form.id || `block-${Date.now()}` };
+      ? { ...form, html: cleanHtml, id: editingBlock.id }
+      : { ...form, html: cleanHtml, id: form.id || `block-${Date.now()}` };
 
     await fetch("/api/blocks", {
       method: isEdit ? "PUT" : "POST",

@@ -319,6 +319,7 @@ function BlockCard({
                   label={key}
                   value={block.variables[key]}
                   rawTemplate={block.rawTemplate}
+                  clientId={clientId}
                   onChange={val => onChange({ ...block.variables, [key]: val })}
                 />
               ))}
@@ -345,7 +346,7 @@ function parseImgDims(template: string, varName: string): { w: string; h: string
   return null;
 }
 
-function VariableField({ label, value, rawTemplate, onChange }: { label: string; value: string; rawTemplate?: string; onChange: (v: string) => void }) {
+function VariableField({ label, value, rawTemplate, clientId, onChange }: { label: string; value: string; rawTemplate?: string; clientId?: string; onChange: (v: string) => void }) {
   const lower = label.toLowerCase();
   const isRich = RICH_KEYS.some(k => lower.includes(k));
   const isImage = IMAGE_SUFFIXES.some(k => lower.includes(k)) || IMAGE_EXACT.includes(lower);
@@ -362,6 +363,7 @@ function VariableField({ label, value, rawTemplate, onChange }: { label: string;
     try {
       const fd = new FormData();
       fd.append("file", file);
+      if (clientId) fd.append("clientId", clientId);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       if (res.ok) {
         onChange((await res.json()).url);
