@@ -76,10 +76,13 @@ export default function AdminBlocksManager() {
 
   const uploadBase64InHtml = useCallback(async (html: string): Promise<string> => {
     const base64Re = /src="(data:image\/([^;]+);base64,([^"]+))"/g;
-    const matches = [...html.matchAll(base64Re)];
-    if (matches.length === 0) return html;
+    if (!base64Re.test(html)) return html;
+    base64Re.lastIndex = 0;
     let result = html;
-    for (const [fullMatch, , mimeType, base64Data] of matches) {
+    const re = new RegExp(base64Re.source, "g");
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html)) !== null) {
+      const [fullMatch, , mimeType, base64Data] = m;
       try {
         const binary = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
         const ext = mimeType.replace("jpeg", "jpg");
