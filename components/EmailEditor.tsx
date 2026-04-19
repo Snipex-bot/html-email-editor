@@ -4,7 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import {
   Download, Copy, Check, RefreshCw, Code2, Eye,
-  Monitor, Smartphone, Mail,
+  Mail, Minus, Plus,
 } from "lucide-react";
 import BlockPalette from "./BlockPalette";
 import ActiveBlocksList from "./ActiveBlocksList";
@@ -21,7 +21,6 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
 });
 
 type ViewMode = "split" | "code" | "preview";
-type DeviceMode = "desktop" | "mobile";
 
 // ── helpers ─────────────────────────────────────────────────────
 
@@ -80,9 +79,9 @@ const EMPTY_HTML = `<!DOCTYPE html>
 export default function EmailEditor() {
   const [activeBlocks, setActiveBlocks] = useState<ActiveBlock[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("split");
-  const [deviceMode, setDeviceMode] = useState<DeviceMode>("desktop");
   const [copied, setCopied] = useState(false);
   const [splitPct, setSplitPct] = useState(50);
+  const [previewWidth, setPreviewWidth] = useState<number>(600);
   const [pendingBlock, setPendingBlock] = useState<LibraryBlock | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -268,12 +267,6 @@ export default function EmailEditor() {
           ))}
         </div>
 
-        {viewMode !== "code" && (
-          <div className="flex items-center gap-0.5 bg-gray-800 rounded-lg p-1">
-            <button onClick={() => setDeviceMode("desktop")} className={`px-2.5 py-1 rounded-md text-xs transition-all ${deviceMode === "desktop" ? "bg-gray-600 text-white" : "text-gray-400 hover:text-white"}`} title="Desktop"><Monitor size={12} /></button>
-            <button onClick={() => setDeviceMode("mobile")} className={`px-2.5 py-1 rounded-md text-xs transition-all ${deviceMode === "mobile" ? "bg-gray-600 text-white" : "text-gray-400 hover:text-white"}`} title="Mobil"><Smartphone size={12} /></button>
-          </div>
-        )}
 
         <div className="flex-1" />
 
@@ -357,27 +350,56 @@ export default function EmailEditor() {
           {/* Preview panel */}
           {(viewMode === "split" || viewMode === "preview") && (
             <div className="flex flex-col overflow-hidden bg-gray-100" style={{ width: viewMode === "split" ? `${100 - splitPct}%` : "100%" }}>
-              <div className="flex items-center gap-2 px-4 h-8 bg-gray-900 border-b border-gray-800 flex-shrink-0">
+              {/* Preview header */}
+              <div className="flex items-center gap-2 px-3 h-8 bg-gray-900 border-b border-gray-800 flex-shrink-0">
                 <div className="flex gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-red-500 opacity-60" />
                   <span className="w-2 h-2 rounded-full bg-yellow-500 opacity-60" />
                   <span className="w-2 h-2 rounded-full bg-green-500 opacity-60" />
                 </div>
-                <span className="text-xs text-gray-500 flex-1 text-center">
-                  {deviceMode === "mobile" ? "Mobile (375px)" : "Desktop"}
-                </span>
+                {/* Width control */}
+                <div className="flex items-center gap-1 ml-2">
+                  <button
+                    onClick={() => setPreviewWidth(w => Math.max(320, w - 20))}
+                    className="text-gray-600 hover:text-white transition-colors"
+                  ><Minus size={10} /></button>
+                  <input
+                    type="number"
+                    value={previewWidth}
+                    onChange={e => setPreviewWidth(Math.max(320, Math.min(1200, Number(e.target.value))))}
+                    className="w-14 bg-gray-800 border border-gray-700 rounded px-1.5 py-0.5 text-[10px] text-white text-center focus:outline-none focus:border-indigo-500"
+                  />
+                  <span className="text-[10px] text-gray-600">px</span>
+                  <button
+                    onClick={() => setPreviewWidth(w => Math.min(1200, w + 20))}
+                    className="text-gray-600 hover:text-white transition-colors"
+                  ><Plus size={10} /></button>
+                </div>
+                {/* Presets */}
+                <div className="flex items-center gap-1 ml-1">
+                  {[375, 600, 800].map(w => (
+                    <button
+                      key={w}
+                      onClick={() => setPreviewWidth(w)}
+                      className={`text-[9px] px-1.5 py-0.5 rounded transition-colors ${previewWidth === w ? "bg-indigo-600 text-white" : "text-gray-600 hover:text-white"}`}
+                    >{w}</button>
+                  ))}
+                </div>
+                <div className="flex-1" />
+                <span className="text-[10px] text-gray-600">{previewWidth}px</span>
               </div>
-              <div className={`flex-1 overflow-auto ${deviceMode === "mobile" ? "flex items-start justify-center pt-6 pb-6 bg-gray-200" : "bg-gray-100"}`}>
+
+              {/* Preview area */}
+              <div className="flex-1 overflow-auto flex items-start justify-center bg-gray-200 pt-4 pb-4">
                 <div
-                  className={deviceMode === "mobile" ? "w-[375px] rounded-2xl overflow-hidden shadow-2xl border-4 border-gray-800 bg-white" : "w-full h-full"}
-                  style={deviceMode === "mobile" ? { minHeight: 600 } : {}}
+                  className="bg-white shadow-xl flex-shrink-0"
+                  style={{ width: previewWidth, minHeight: "100%" }}
                 >
                   <iframe
                     srcDoc={html}
                     title="Email Preview"
                     sandbox="allow-same-origin"
-                    className="w-full border-0 bg-white"
-                    style={deviceMode === "mobile" ? { height: 700, display: "block" } : { height: "100%", display: "block" }}
+                    style={{ width: "100%", height: "800px", display: "block", border: 0 }}
                   />
                 </div>
               </div>

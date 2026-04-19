@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { GripVertical, Trash2, ChevronDown, ChevronRight, Layers, ChevronUp } from "lucide-react";
 import type { ActiveBlock } from "./types";
+import RichTextField from "./RichTextField";
 
 const TYPE_COLORS: Record<string, string> = {
   header:   "text-purple-400",
@@ -241,8 +242,11 @@ function BlockCard({
   );
 }
 
+const RICH_KEYS = ["text", "heading", "subheading", "body", "description", "quote", "name", "title", "subject"];
+
 function VariableField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  const isLong = label.includes("text") || label.includes("heading") || label.includes("body") || label.includes("description");
+  const isRich = RICH_KEYS.some(k => label.toLowerCase().includes(k));
+  const isUrl = label.includes("url") || label.includes("image") || label.includes("src");
   const displayLabel = label.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 
   return (
@@ -250,17 +254,16 @@ function VariableField({ label, value, onChange }: { label: string; value: strin
       <label className="block text-[10px] text-gray-500 mb-1 font-medium truncate" title={`{{${label}}}`}>
         {displayLabel}
       </label>
-      {isLong ? (
-        <textarea
+      {isRich ? (
+        <RichTextField
           value={value}
-          onChange={e => onChange(e.target.value)}
-          rows={2}
+          onChange={onChange}
           placeholder={`{{${label}}}`}
-          className="w-full bg-gray-900 border border-gray-700 focus:border-indigo-500 rounded-md px-2 py-1.5 text-xs text-white placeholder-gray-700 focus:outline-none transition-colors resize-none"
+          rows={label.includes("body") || label.includes("text") ? 3 : 1}
         />
       ) : (
         <input
-          type="text"
+          type={isUrl ? "url" : "text"}
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={`{{${label}}}`}

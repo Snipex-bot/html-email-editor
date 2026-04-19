@@ -156,7 +156,7 @@ export default function BlockPalette({ onAddBlock }: Props) {
               draggable
               onDragStart={(e) => onDragStart(e, block)}
               onClick={() => onAddBlock(block)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium flex-shrink-0 transition-all hover:scale-105 hover:shadow-lg ${TYPE_COLORS[block.type] ?? "bg-gray-800 text-gray-300 border-gray-600"}`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium flex-shrink-0 transition-opacity active:opacity-70 ${TYPE_COLORS[block.type] ?? "bg-gray-800 text-gray-300 border-gray-600"}`}
               title={block.description}
             >
               <GripVertical size={10} className="opacity-50" />
