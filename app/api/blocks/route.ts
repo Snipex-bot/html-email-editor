@@ -4,11 +4,14 @@ import { supabase } from "@/lib/supabase";
 const BASE64_RE = /src="(data:image\/([^;]+);base64,([^"]+))"/g;
 
 async function replaceBase64Images(html: string): Promise<string> {
-  const matches = [...html.matchAll(BASE64_RE)];
-  if (matches.length === 0) return html;
+  if (!BASE64_RE.test(html)) return html;
+  BASE64_RE.lastIndex = 0;
 
   let result = html;
-  for (const [fullMatch, , mimeType, base64Data] of matches) {
+  const re = new RegExp(BASE64_RE.source, "g");
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(html)) !== null) {
+    const [fullMatch, , mimeType, base64Data] = match;
     try {
       const binary = Buffer.from(base64Data, "base64");
       const ext = mimeType.replace("jpeg", "jpg");

@@ -39,10 +39,11 @@ export async function POST(req: Request) {
     const urlCache = new Map<string, string>();
 
     let newHtml = html;
-    const matches = [...html.matchAll(BASE64_RE)];
+    const re = new RegExp(BASE64_RE.source, "g");
+    let match: RegExpExecArray | null;
 
-    for (const match of matches) {
-      const [fullMatch, fullSrc, mimeType, base64Data] = match;
+    while ((match = re.exec(html)) !== null) {
+      const [fullMatch, , mimeType, base64Data] = match;
       try {
         let url = urlCache.get(base64Data.slice(0, 32));
         if (!url) {
