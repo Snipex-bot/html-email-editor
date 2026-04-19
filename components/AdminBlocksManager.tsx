@@ -35,14 +35,22 @@ export default function AdminBlocksManager() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/clients")
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 10000);
+    fetch("/api/clients", { signal: ctrl.signal })
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((data: Client[]) => {
+        clearTimeout(timer);
         setClients(data);
         if (data.length > 0) setActiveClient(data[0].id);
         setLoading(false);
       })
-      .catch(e => { setLoadError(e.message); setLoading(false); });
+      .catch(e => {
+        clearTimeout(timer);
+        setLoadError(e.name === "AbortError" ? "Časový limit překročen — zkontroluj Supabase připojení" : e.message);
+        setLoading(false);
+      });
+    return () => { clearTimeout(timer); ctrl.abort(); };
   }, []);
 
   useEffect(() => {
