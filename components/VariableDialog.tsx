@@ -56,19 +56,19 @@ export default function VariableDialog({ html, onConfirm, onCancel }: Props) {
           {variables.map((v) => {
             const vl = v.toLowerCase();
             const isImage = IMAGE_SUFFIXES.some(k => vl.includes(k)) || IMAGE_EXACT.includes(vl);
-            const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+            const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
               const file = e.target.files?.[0];
               if (!file) return;
               e.target.value = "";
-              try {
-                const fd = new FormData();
-                fd.append("file", file);
-                const res = await fetch("/api/upload", { method: "POST", body: fd });
-                if (res.ok) { setValues(prev => ({ ...prev, [v]: (await res.json()).url })); return; }
-              } catch {}
-              const reader = new FileReader();
-              reader.onload = () => setValues(prev => ({ ...prev, [v]: reader.result as string }));
-              reader.readAsDataURL(file);
+              const fd = new FormData();
+              fd.append("file", file);
+              fetch("/api/upload", { method: "POST", body: fd })
+                .then(res => res.ok ? res.json().then((d: { url: string }) => setValues(prev => ({ ...prev, [v]: d.url }))) : Promise.reject())
+                .catch(() => {
+                  const reader = new FileReader();
+                  reader.onload = () => setValues(prev => ({ ...prev, [v]: reader.result as string }));
+                  reader.readAsDataURL(file);
+                });
             };
             return (
               <div key={v}>
