@@ -165,10 +165,11 @@ export default function NewsletterEditor({ newsletterId }: Props) {
       body: JSON.stringify({ id: newsletterId, name: newsletterName, blocks: activeBlocks }),
     });
     localStorage.removeItem(DRAFT_KEY(newsletterId));
+    try { localStorage.setItem(`preview:${newsletterId}`, html); } catch {}
     setHasDraft(false);
     setSavedAt(new Date());
     setSaving(false);
-  }, [newsletterId, newsletterName, activeBlocks]);
+  }, [newsletterId, newsletterName, activeBlocks, html]);
 
   // ── name edit ────────────────────────────────────────────────
 
@@ -298,11 +299,12 @@ export default function NewsletterEditor({ newsletterId }: Props) {
       body: JSON.stringify({ id: newsletterId, name: newsletterName, blocks: activeBlocks }),
     });
     localStorage.removeItem(DRAFT_KEY(newsletterId));
+    try { localStorage.setItem(`preview:${newsletterId}`, html); } catch {}
     setHasDraft(false);
     setSavedAt(new Date());
     setSaving(false);
     window.open(`/preview/${newsletterId}`, "_blank");
-  }, [newsletterId, newsletterName, activeBlocks]);
+  }, [newsletterId, newsletterName, activeBlocks, html]);
 
   if (loading) {
     return (
