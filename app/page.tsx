@@ -25,8 +25,8 @@ const tools = [
   {
     href: null,
     icon: Layers,
-    label: "Šablony",
-    description: "Předdefinované šablony pro různé typy kampaní — newsletter, promo, transakční.",
+    label: "Reporting",
+    description: "Přehledy výkonu kampaní — otevírání, kliky, odhlášení a konverze na jednom místě.",
     color: "from-teal-500 to-cyan-600",
     badge: "Brzy",
     badgeColor: "bg-gray-800 text-gray-500 border-gray-700",
@@ -116,23 +116,6 @@ export default function Home() {
           })}
         </div>
 
-        {/* Admin card */}
-        <div className="mt-6">
-          <Link href="/nastaveni">
-            <div className="group flex items-center justify-between p-5 rounded-2xl bg-gray-900 border border-gray-800 hover:border-gray-600 hover:bg-gray-900/80 transition-all cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="w-9 h-9 rounded-xl bg-gray-800 flex items-center justify-center">
-                  <Settings size={16} className="text-gray-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">Admin sekce</p>
-                  <p className="text-xs text-gray-500">Správa klientů, bloků a nastavení nástrojů</p>
-                </div>
-              </div>
-              <ArrowRight size={14} className="text-gray-600 group-hover:text-gray-400 transition-colors" />
-            </div>
-          </Link>
-        </div>
       </div>
     </div>
   );
