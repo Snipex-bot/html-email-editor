@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X, Wand2 } from "lucide-react";
+import { X, Wand2, ImagePlus } from "lucide-react";
+
+const IMAGE_KEYS = ["image", "img", "foto", "photo", "picture", "banner", "thumbnail"];
 
 interface Props {
   html: string;
@@ -50,21 +52,53 @@ export default function VariableDialog({ html, onConfirm, onCancel }: Props) {
         </div>
 
         <div className="p-5 space-y-3 max-h-[60vh] overflow-y-auto">
-          {variables.map((v) => (
-            <div key={v}>
-              <label className="block text-xs text-gray-400 mb-1.5 font-medium">
-                {labelFor(v)}
-                <span className="ml-2 font-mono text-gray-600 font-normal">{`{{${v}}}`}</span>
-              </label>
-              <input
-                type="text"
-                value={values[v]}
-                onChange={(e) => setValues((prev) => ({ ...prev, [v]: e.target.value }))}
-                placeholder={`Hodnota pro ${labelFor(v)}…`}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition-colors"
-              />
-            </div>
-          ))}
+          {variables.map((v) => {
+            const isImage = IMAGE_KEYS.some(k => v.toLowerCase().includes(k));
+            const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              const reader = new FileReader();
+              reader.onload = () => setValues(prev => ({ ...prev, [v]: reader.result as string }));
+              reader.readAsDataURL(file);
+              e.target.value = "";
+            };
+            return (
+              <div key={v}>
+                <label className="block text-xs text-gray-400 mb-1.5 font-medium">
+                  {labelFor(v)}
+                  <span className="ml-2 font-mono text-gray-600 font-normal">{`{{${v}}}`}</span>
+                </label>
+                {isImage ? (
+                  <div className="space-y-1.5">
+                    {values[v] && (
+                      <img src={values[v]} alt="" className="w-full h-20 object-cover rounded border border-gray-700" />
+                    )}
+                    <div className="flex gap-2">
+                      <label className="flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs text-white cursor-pointer transition-colors flex-shrink-0">
+                        <ImagePlus size={12} /> Vložit foto
+                        <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
+                      </label>
+                      <input
+                        type="url"
+                        value={values[v]}
+                        onChange={e => setValues(prev => ({ ...prev, [v]: e.target.value }))}
+                        placeholder="nebo URL obrázku…"
+                        className="flex-1 min-w-0 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    value={values[v]}
+                    onChange={(e) => setValues((prev) => ({ ...prev, [v]: e.target.value }))}
+                    placeholder={`Hodnota pro ${labelFor(v)}…`}
+                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <div className="flex gap-2 px-5 py-4 border-t border-gray-800 justify-end">

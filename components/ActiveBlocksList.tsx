@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { GripVertical, Trash2, ChevronDown, ChevronRight, Layers, ChevronUp } from "lucide-react";
+import { GripVertical, Trash2, ChevronDown, ChevronRight, Layers, ChevronUp, ImagePlus } from "lucide-react";
 import type { ActiveBlock } from "./types";
 import RichTextField from "./RichTextField";
 
@@ -243,11 +243,23 @@ function BlockCard({
 }
 
 const RICH_KEYS = ["text", "heading", "subheading", "body", "description", "quote", "name", "title", "subject"];
+const IMAGE_KEYS = ["image", "img", "foto", "photo", "picture", "banner", "thumbnail"];
 
 function VariableField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
-  const isRich = RICH_KEYS.some(k => label.toLowerCase().includes(k));
-  const isUrl = label.includes("url") || label.includes("image") || label.includes("src");
+  const lower = label.toLowerCase();
+  const isRich = RICH_KEYS.some(k => lower.includes(k));
+  const isImage = IMAGE_KEYS.some(k => lower.includes(k));
+  const isUrl = !isImage && (label.includes("url") || label.includes("src"));
   const displayLabel = label.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => onChange(reader.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   return (
     <div>
@@ -261,6 +273,25 @@ function VariableField({ label, value, onChange }: { label: string; value: strin
           placeholder={`{{${label}}}`}
           rows={label.includes("body") || label.includes("text") ? 3 : 1}
         />
+      ) : isImage ? (
+        <div className="space-y-1.5">
+          {value && (
+            <img src={value} alt="" className="w-full h-16 object-cover rounded border border-gray-700" />
+          )}
+          <div className="flex gap-1">
+            <label className="flex items-center gap-1 px-2 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded text-[10px] text-white cursor-pointer transition-colors flex-shrink-0">
+              <ImagePlus size={10} /> Vložit
+              <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
+            </label>
+            <input
+              type="url"
+              value={value}
+              onChange={e => onChange(e.target.value)}
+              placeholder="nebo URL..."
+              className="flex-1 min-w-0 bg-gray-900 border border-gray-700 focus:border-indigo-500 rounded-md px-2 py-1.5 text-xs text-white placeholder-gray-700 focus:outline-none transition-colors"
+            />
+          </div>
+        </div>
       ) : (
         <input
           type={isUrl ? "url" : "text"}

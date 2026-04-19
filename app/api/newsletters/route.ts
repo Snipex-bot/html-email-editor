@@ -9,13 +9,13 @@ export async function GET(req: Request) {
   if (id) {
     const { data, error } = await supabase.from("newsletters").select("*").eq("id", id).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 404 });
-    return NextResponse.json(data);
+    return NextResponse.json(toApi(data));
   }
 
   const query = supabase.from("newsletters").select("*").order("updated_at", { ascending: false });
   const { data, error } = clientId ? await query.eq("client_id", clientId) : await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  return NextResponse.json((data as Record<string, unknown>[]).map(toApi));
 }
 
 export async function POST(req: Request) {

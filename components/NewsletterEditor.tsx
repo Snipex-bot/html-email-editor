@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   Download, Copy, Check, RefreshCw, Code2, Eye,
   Mail, Minus, Plus, Save, Loader2, ChevronRight,
-  Home, Pencil, X,
+  Home, Pencil, X, ExternalLink,
 } from "lucide-react";
 import BlockPalette from "./BlockPalette";
 import ActiveBlocksList from "./ActiveBlocksList";
@@ -52,8 +52,16 @@ function buildHtml(blocks: ActiveBlock[]): string {
   <style>
     body { margin: 0; padding: 0; background: #f4f5f7; font-family: Arial, Helvetica, sans-serif; }
     table { border-collapse: collapse; mso-table-lspace: 0; mso-table-rspace: 0; }
-    img { border: 0; outline: none; display: block; }
+    img { border: 0; outline: none; display: block; max-width: 100%; height: auto; }
     a { text-decoration: none; }
+    @media only screen and (max-width: 600px) {
+      table[width] { width: 100% !important; min-width: unset !important; }
+      td[width] { width: auto !important; }
+      img { max-width: 100% !important; width: 100% !important; height: auto !important; }
+      h1, h2, h3 { font-size: 20px !important; line-height: 1.3 !important; }
+      .mobile-full { width: 100% !important; display: block !important; }
+      .mobile-pad { padding-left: 16px !important; padding-right: 16px !important; }
+    }
   </style>
 </head>
 <body>
@@ -273,6 +281,12 @@ export default function NewsletterEditor({ newsletterId }: Props) {
     setCopied(true); setTimeout(() => setCopied(false), 2000);
   }, [html]);
 
+  const handlePreviewNewTab = useCallback(() => {
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  }, [html]);
+
   if (loading) {
     return (
       <div className="editor-root flex items-center justify-center bg-gray-950 text-gray-600">
@@ -350,6 +364,10 @@ export default function NewsletterEditor({ newsletterId }: Props) {
         {/* Actions */}
         <button onClick={handleCopy} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-all">
           {copied ? <><Check size={11} className="text-green-400" /><span className="hidden md:inline text-green-400">Zkopírováno</span></> : <><Copy size={11} /><span className="hidden md:inline">Kopírovat</span></>}
+        </button>
+        <button onClick={handlePreviewNewTab} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-all">
+          <ExternalLink size={11} />
+          <span className="hidden md:inline">Náhled e-mailu</span>
         </button>
         <button onClick={handleDownload} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-gray-800 transition-all">
           <Download size={11} />
