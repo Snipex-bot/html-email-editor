@@ -1,56 +1,42 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-
-const DATA_DIR = path.join(process.cwd(), "data", "clients");
-
-interface Block {
-  id: string;
-  name: string;
-  type: string;
-  description: string;
-  html: string;
-}
-
-function blocksPath(clientId: string) {
-  return path.join(DATA_DIR, clientId, "blocks.json");
-}
-
-function readBlocks(clientId: string): Block[] {
-  const p = blocksPath(clientId);
-  return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf-8")) : [];
-}
-
-function writeBlocks(clientId: string, blocks: Block[]) {
-  fs.writeFileSync(blocksPath(clientId), JSON.stringify(blocks, null, 2));
-}
+import { supabase } from "@/lib/supabase";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const clientId = searchParams.get("clientId");
   if (!clientId) return NextResponse.json({ error: "Missing clientId" }, { status: 400 });
-  return NextResponse.json(readBlocks(clientId));
+
+  const { data, error } = await supabase
+    .from("blocks")
+    .select("*")
+    .eq("client_id", clientId)
+    .order("name");
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
 }
 
 export async function POST(req: Request) {
   const { clientId, block } = await req.json();
-  if (!clientId || !block) return NextResponse.json({ error: "Missing data" }, { status: 400 });
-  const blocks = readBlocks(clientId);
-  const newBlock: Block = { ...block, id: block.id || `block-${Date.now()}` };
-  blocks.push(newBlock);
-  writeBlocks(clientId, blocks);
-  return NextResponse.json(newBlock);
+  const { data, error } = await supabase
+    .from("blocks")
+    .insert({ ...block, id: block.id || `block-${Date.now()}`, client_id: clientId })
+    .select()
+    .single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
 }
 
 export async function PUT(req: Request) {
   const { clientId, block } = await req.json();
-  if (!clientId || !block?.id) return NextResponse.json({ error: "Missing data" }, { status: 400 });
-  const blocks = readBlocks(clientId);
-  const idx = blocks.findIndex((b) => b.id === block.id);
-  if (idx === -1) return NextResponse.json({ error: "Block not found" }, { status: 404 });
-  blocks[idx] = block;
-  writeBlocks(clientId, blocks);
-  return NextResponse.json(block);
+  const { data, error } = await supabase
+    .from("blocks")
+    .update({ name: block.name, type: block.type, description: block.description, html: block.html })
+    .eq("id", block.id)
+    .eq("client_id", clientId)
+    .select()
+    .single();
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
 }
 
 export async function DELETE(req: Request) {
@@ -58,7 +44,12 @@ export async function DELETE(req: Request) {
   const clientId = searchParams.get("clientId");
   const blockId = searchParams.get("blockId");
   if (!clientId || !blockId) return NextResponse.json({ error: "Missing params" }, { status: 400 });
-  const blocks = readBlocks(clientId);
-  writeBlocks(clientId, blocks.filter((b) => b.id !== blockId));
+
+  const { error } = await supabase
+    .from("blocks")
+    .delete()
+    .eq("id", blockId)
+    .eq("client_id", clientId);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
