@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Settings, ArrowRight, Layers, Sparkles, Lock } from "lucide-react";
+import { Mail, Settings, ArrowRight, Layers, Sparkles, Lock, Eye } from "lucide-react";
 
 const tools = [
   {
@@ -28,6 +28,16 @@ const tools = [
     label: "Reporting",
     description: "Přehledy výkonu kampaní — otevírání, kliky, odhlášení a konverze na jednom místě.",
     color: "from-teal-500 to-cyan-600",
+    badge: "Brzy",
+    badgeColor: "bg-gray-800 text-gray-500 border-gray-700",
+    available: false,
+  },
+  {
+    href: null,
+    icon: Eye,
+    label: "Sledování konkurence",
+    description: "Monitorujeme newslettery konkurence za tebe — pravidelné přehledy o tématech, předmětech e-mailů a frekvenci rozesílek.",
+    color: "from-rose-500 to-pink-600",
     badge: "Brzy",
     badgeColor: "bg-gray-800 text-gray-500 border-gray-700",
     available: false,
