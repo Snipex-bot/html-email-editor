@@ -23,6 +23,8 @@ interface Client {
   color: string;
 }
 
+const TZ = "Europe/Prague";
+
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
@@ -30,7 +32,9 @@ function timeAgo(iso: string) {
   if (m < 60) return `před ${m} min`;
   const h = Math.floor(m / 60);
   if (h < 24) return `před ${h} h`;
-  return `před ${Math.floor(h / 24)} d`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `před ${d} d`;
+  return new Date(iso).toLocaleDateString("cs-CZ", { timeZone: TZ, day: "numeric", month: "short" });
 }
 
 export default function NewsletterList() {

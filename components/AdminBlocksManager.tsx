@@ -31,12 +31,18 @@ export default function AdminBlocksManager() {
   const [saving, setSaving] = useState(false);
   const [previewBlock, setPreviewBlock] = useState<LibraryBlock | null>(null);
   const [clientDropdown, setClientDropdown] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/clients").then(r => r.json()).then((data: Client[]) => {
-      setClients(data);
-      if (data.length > 0) setActiveClient(data[0].id);
-    });
+    fetch("/api/clients")
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then((data: Client[]) => {
+        setClients(data);
+        if (data.length > 0) setActiveClient(data[0].id);
+        setLoading(false);
+      })
+      .catch(e => { setLoadError(e.message); setLoading(false); });
   }, []);
 
   useEffect(() => {
@@ -111,7 +117,23 @@ export default function AdminBlocksManager() {
         </div>
       </nav>
 
-      <div className="max-w-6xl mx-auto px-6 py-8 flex gap-6">
+      {loadError && (
+        <div className="max-w-6xl mx-auto px-6 pt-8">
+          <div className="bg-red-900/30 border border-red-700/50 rounded-xl p-4 text-sm text-red-300">
+            <strong>Chyba při načítání:</strong> {loadError}
+            <p className="text-xs text-red-400 mt-1 opacity-70">Zkontroluj Supabase env proměnné a připojení.</p>
+          </div>
+        </div>
+      )}
+      {loading && (
+        <div className="flex items-center justify-center py-20 text-gray-600">
+          <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+          </svg>
+        </div>
+      )}
+      {!loading && <div className="max-w-6xl mx-auto px-6 py-8 flex gap-6">
 
         {/* ── LEFT: client list ── */}
         <div className="w-56 flex-shrink-0">
@@ -297,7 +319,7 @@ export default function AdminBlocksManager() {
             ))}
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

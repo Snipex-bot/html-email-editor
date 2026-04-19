@@ -82,6 +82,8 @@ export default function NewsletterEditor({ newsletterId }: Props) {
   const [copied, setCopied] = useState(false);
   const [splitPct, setSplitPct] = useState(50);
   const [previewWidth, setPreviewWidth] = useState(600);
+  const [previewContainerW, setPreviewContainerW] = useState(0);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
   const [pendingBlock, setPendingBlock] = useState<LibraryBlock | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -246,6 +248,15 @@ export default function NewsletterEditor({ newsletterId }: Props) {
     };
     window.addEventListener("mousemove", mm); window.addEventListener("mouseup", mu);
     return () => { window.removeEventListener("mousemove", mm); window.removeEventListener("mouseup", mu); };
+  }, []);
+
+  // ── preview container ResizeObserver ─────────────────────────
+  useEffect(() => {
+    const el = previewContainerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setPreviewContainerW(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
   // ── toolbar ──────────────────────────────────────────────────
@@ -437,13 +448,25 @@ export default function NewsletterEditor({ newsletterId }: Props) {
                   ))}
                 </div>
               </div>
-              <div className="flex-1 overflow-auto flex items-start justify-center pt-4 pb-4 bg-gray-200">
-                <div className="bg-white shadow-xl flex-shrink-0" style={{ width: previewWidth, minHeight: "100%" }}>
-                  <iframe srcDoc={html} title="Preview" sandbox="allow-same-origin"
-                    style={{ width: "100%", height: "800px", display: "block", border: 0 }}
-                  />
-                </div>
-              </div>
+              {(() => {
+                const pad = 32;
+                const scale = previewContainerW > 0 && previewWidth > previewContainerW - pad
+                  ? (previewContainerW - pad) / previewWidth
+                  : 1;
+                const iframeH = 800;
+                const scaledH = Math.round(iframeH * scale);
+                return (
+                  <div ref={previewContainerRef} className="flex-1 overflow-hidden flex justify-center pt-4 pb-4 bg-gray-200">
+                    <div style={{ width: previewWidth * scale, height: scaledH, flexShrink: 0 }}>
+                      <div style={{ width: previewWidth, transformOrigin: "top left", transform: `scale(${scale})` }}>
+                        <iframe srcDoc={html} title="Preview" sandbox="allow-same-origin"
+                          style={{ width: "100%", height: iframeH, display: "block", border: 0 }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
