@@ -275,12 +275,18 @@ export default function NewsletterEditor({ newsletterId }: Props) {
 
   // ── toolbar ──────────────────────────────────────────────────
 
-  const handleDownload = useCallback(() => {
+  const handleDownload = useCallback(async () => {
+    // save first so the ZIP uses the latest blocks
+    setSaving(true);
+    await saveToServer();
+    setHasDraft(false);
+    setSavedAt(new Date());
+    setSaving(false);
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
-    a.download = `${newsletterName.replace(/\s+/g, "-").toLowerCase()}.html`;
+    a.href = `/api/newsletters/download?id=${newsletterId}`;
+    a.download = "";
     a.click();
-  }, [html, newsletterName]);
+  }, [saveToServer, newsletterId]);
 
   const handleCopy = useCallback(async () => {
     await navigator.clipboard.writeText(html);
