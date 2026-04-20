@@ -94,6 +94,7 @@ export default function NewsletterEditor({ newsletterId }: Props) {
   const [iframeContentH, setIframeContentH] = useState(800);
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [pendingBlock, setPendingBlock] = useState<LibraryBlock | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -157,18 +158,26 @@ export default function NewsletterEditor({ newsletterId }: Props) {
 
   // ── save to server ───────────────────────────────────────────
 
-  const handleSave = useCallback(async () => {
-    setSaving(true);
-    await fetch("/api/newsletters", {
+  const saveToServer = useCallback(async () => {
+    const res = await fetch("/api/newsletters", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: newsletterId, name: newsletterName, blocks: activeBlocks }),
     });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.previewUrl) setPreviewUrl(data.previewUrl);
+    }
     localStorage.removeItem(DRAFT_KEY(newsletterId));
+  }, [newsletterId, newsletterName, activeBlocks]);
+
+  const handleSave = useCallback(async () => {
+    setSaving(true);
+    await saveToServer();
     setHasDraft(false);
     setSavedAt(new Date());
     setSaving(false);
-  }, [newsletterId, newsletterName, activeBlocks, html]);
+  }, [saveToServer, html]);
 
   // ── name edit ────────────────────────────────────────────────
 
@@ -292,17 +301,12 @@ export default function NewsletterEditor({ newsletterId }: Props) {
 
   const handlePreviewNewTab = useCallback(async () => {
     setSaving(true);
-    await fetch("/api/newsletters", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: newsletterId, name: newsletterName, blocks: activeBlocks }),
-    });
-    localStorage.removeItem(DRAFT_KEY(newsletterId));
+    await saveToServer();
     setHasDraft(false);
     setSavedAt(new Date());
     setSaving(false);
-    window.open(`/preview/${newsletterId}?t=${Date.now()}`, "_blank");
-  }, [newsletterId, newsletterName, activeBlocks, html]);
+    window.open(previewUrl ?? `/preview/${newsletterId}`, "_blank");
+  }, [saveToServer, previewUrl, newsletterId]);
 
   if (loading) {
     return (

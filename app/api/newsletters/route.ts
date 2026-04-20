@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { buildEmailHtml } from "@/lib/buildEmail";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -34,6 +35,7 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   const body = await req.json();
   if (!body.id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
   const { data, error } = await supabase
     .from("newsletters")
     .update({
@@ -45,7 +47,21 @@ export async function PUT(req: Request) {
     .select()
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(toApi(data));
+
+  // upload rendered HTML to Storage → emails/{clientId}/{id}.html
+  let previewUrl: string | null = null;
+  const clientId = data.client_id as string | null;
+  if (clientId) {
+    const html = buildEmailHtml(data.name as string, Array.isArray(data.blocks) ? data.blocks : []);
+    const path = `${clientId}/${data.id}.html`;
+    await supabase.storage.from("emails").upload(path, Buffer.from(html, "utf-8"), {
+      contentType: "text/html; charset=utf-8",
+      upsert: true,
+    });
+    previewUrl = supabase.storage.from("emails").getPublicUrl(path).data.publicUrl;
+  }
+
+  return NextResponse.json({ ...toApi(data), previewUrl });
 }
 
 export async function DELETE(req: Request) {
