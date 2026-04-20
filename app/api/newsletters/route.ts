@@ -54,10 +54,21 @@ export async function PUT(req: Request) {
   if (clientId) {
     const html = buildEmailHtml(data.name as string, Array.isArray(data.blocks) ? data.blocks : []);
     const path = `${clientId}/${data.id}.html`;
-    await supabase.storage.from("emails").upload(path, Buffer.from(html, "utf-8"), {
+    const content = Buffer.from(html, "utf-8");
+
+    // try update first (upsert workaround for anon key)
+    const { error: updateErr } = await supabase.storage.from("emails").update(path, content, {
       contentType: "text/html; charset=utf-8",
-      upsert: true,
     });
+    if (updateErr) {
+      // file doesn't exist yet — insert
+      const { error: insertErr } = await supabase.storage.from("emails").upload(path, content, {
+        contentType: "text/html; charset=utf-8",
+        upsert: false,
+      });
+      if (insertErr) console.error("emails storage upload error:", insertErr.message);
+    }
+
     previewUrl = supabase.storage.from("emails").getPublicUrl(path).data.publicUrl;
   }
 
