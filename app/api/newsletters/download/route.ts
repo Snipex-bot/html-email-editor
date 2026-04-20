@@ -72,7 +72,7 @@ export async function GET(req: Request) {
 
   zip.file("index.html", html);
 
-  const zipBuffer = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" });
+  const zipBuffer = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
   const slug = (data.name as string).toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") || "newsletter";
 
   return new NextResponse(zipBuffer, {
