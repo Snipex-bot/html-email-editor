@@ -74,10 +74,10 @@ export async function GET(req: Request) {
 
   const zipBuffer = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
   const slug = (data.name as string).toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") || "newsletter";
+  const blob = new Blob([zipBuffer], { type: "application/zip" });
 
-  return new Response(zipBuffer, {
+  return new Response(blob, {
     headers: {
-      "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${slug}.zip"`,
     },
   });
