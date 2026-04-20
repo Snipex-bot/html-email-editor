@@ -75,7 +75,7 @@ export async function GET(req: Request) {
   const zipBuffer = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
   const slug = (data.name as string).toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") || "newsletter";
 
-  return new NextResponse(zipBuffer, {
+  return new Response(zipBuffer, {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${slug}.zip"`,
