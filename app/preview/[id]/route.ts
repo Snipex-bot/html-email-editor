@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { unstable_noStore as noStore } from "next/cache";
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { buildEmailHtml } from "@/lib/buildEmail";
@@ -8,6 +9,7 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
+  noStore();
   const { data, error } = await supabase
     .from("newsletters")
     .select("*")

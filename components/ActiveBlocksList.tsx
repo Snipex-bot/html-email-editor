@@ -354,26 +354,29 @@ function VariableField({ label, value, rawTemplate, clientId, onChange }: { labe
   const displayLabel = label.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
     setUploading(true);
+    setUploadError("");
     try {
       const fd = new FormData();
       fd.append("file", file);
       if (clientId) fd.append("clientId", clientId);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json();
       if (res.ok) {
-        onChange((await res.json()).url);
-        setUploading(false);
-        return;
+        onChange(json.url);
+      } else {
+        setUploadError(json.error ?? "Chyba uploadu");
       }
-    } catch {}
-    const reader = new FileReader();
-    reader.onload = () => { onChange(reader.result as string); setUploading(false); };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      setUploadError(String(err));
+    }
+    setUploading(false);
   };
 
   return (
@@ -415,6 +418,7 @@ function VariableField({ label, value, rawTemplate, clientId, onChange }: { labe
               className="flex-1 min-w-0 bg-gray-900 border border-gray-700 focus:border-indigo-500 rounded-md px-2 py-1.5 text-xs text-white placeholder-gray-700 focus:outline-none transition-colors"
             />
           </div>
+          {uploadError && <p className="text-[9px] text-red-400 mt-1">{uploadError}</p>}
         </div>
       ) : (
         <input
