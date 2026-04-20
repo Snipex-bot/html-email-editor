@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { buildEmailHtml } from "@/lib/buildEmail";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -48,31 +47,7 @@ export async function PUT(req: Request) {
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // upload rendered HTML to Storage → emails/{clientId}/{id}.html
-  let previewUrl: string | null = null;
-  const clientId = data.client_id as string | null;
-  if (clientId) {
-    const html = buildEmailHtml(data.name as string, Array.isArray(data.blocks) ? data.blocks : []);
-    const path = `${clientId}/${data.id}.html`;
-    const content = Buffer.from(html, "utf-8");
-
-    // try update first (upsert workaround for anon key)
-    const { error: updateErr } = await supabase.storage.from("emails").update(path, content, {
-      contentType: "text/html; charset=utf-8",
-    });
-    if (updateErr) {
-      // file doesn't exist yet — insert
-      const { error: insertErr } = await supabase.storage.from("emails").upload(path, content, {
-        contentType: "text/html; charset=utf-8",
-        upsert: false,
-      });
-      if (insertErr) console.error("emails storage upload error:", insertErr.message);
-    }
-
-    previewUrl = supabase.storage.from("emails").getPublicUrl(path).data.publicUrl;
-  }
-
-  return NextResponse.json({ ...toApi(data), previewUrl });
+  return NextResponse.json(toApi(data));
 }
 
 export async function DELETE(req: Request) {
