@@ -300,7 +300,7 @@ export default function NewsletterEditor({ newsletterId }: Props) {
     setHasDraft(false);
     setSavedAt(new Date());
     setSaving(false);
-    window.open(`/preview/${newsletterId}`, "_blank");
+    window.open(`/preview/${newsletterId}?v=${Date.now()}`, "_blank");
   }, [saveToServer, newsletterId]);
 
   if (loading) {
