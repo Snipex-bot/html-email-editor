@@ -8,34 +8,28 @@ export async function GET(req: Request) {
   const clientId = searchParams.get("clientId");
   if (!clientId) return NextResponse.json({ error: "Missing clientId" }, { status: 400 });
 
-  const { data, error } = await supabase.storage
+  const { data, error } = await supabase
     .from("images")
-    .list(`uploads/${clientId}`, { limit: 200, sortBy: { column: "created_at", order: "desc" } });
+    .select("*")
+    .eq("client_id", clientId)
+    .order("created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  const files = (data ?? [])
-    .filter(f => f.name !== ".emptyFolderPlaceholder")
-    .map(f => ({
-      name: f.name,
-      size: f.metadata?.size ?? 0,
-      created_at: f.created_at,
-      url: supabase.storage.from("images").getPublicUrl(`uploads/${clientId}/${f.name}`).data.publicUrl,
-    }));
-
-  return NextResponse.json(files);
+  return NextResponse.json(data ?? []);
 }
 
 export async function DELETE(req: Request) {
   const { searchParams } = new URL(req.url);
-  const clientId = searchParams.get("clientId");
-  const name = searchParams.get("name");
-  if (!clientId || !name) return NextResponse.json({ error: "Missing params" }, { status: 400 });
+  const id = searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
 
-  const { error } = await supabase.storage
-    .from("images")
-    .remove([`uploads/${clientId}/${name}`]);
+  // get path first so we can remove from storage too
+  const { data: img } = await supabase.from("images").select("path").eq("id", id).single();
+  if (img?.path) {
+    await supabase.storage.from("images").remove([img.path]);
+  }
 
+  const { error } = await supabase.from("images").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

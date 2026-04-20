@@ -5,11 +5,14 @@ import { ArrowLeft, ChevronDown, Trash2, Upload, Loader2, Copy, Check, ImageOff 
 import Link from "next/link";
 import type { Client } from "./types";
 
-interface ImageFile {
+interface ImageRecord {
+  id: string;
+  client_id: string;
   name: string;
+  path: string;
+  url: string;
   size: number;
   created_at: string;
-  url: string;
 }
 
 function formatSize(bytes: number) {
@@ -22,10 +25,10 @@ export default function ImagesAdmin() {
   const [clients, setClients] = useState<Client[]>([]);
   const [activeClientId, setActiveClientId] = useState<string | null>(null);
   const [clientOpen, setClientOpen] = useState(false);
-  const [images, setImages] = useState<ImageFile[]>([]);
+  const [images, setImages] = useState<ImageRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -41,7 +44,7 @@ export default function ImagesAdmin() {
     setLoading(true);
     fetch(`/api/images?clientId=${clientId}`)
       .then(r => r.json())
-      .then((data: ImageFile[]) => { setImages(data); setLoading(false); })
+      .then((data: ImageRecord[]) => { setImages(data); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
@@ -66,16 +69,16 @@ export default function ImagesAdmin() {
     loadImages(activeClientId);
   };
 
-  const handleDelete = async (name: string) => {
-    if (!activeClientId || !confirm(`Smazat obrázek "${name}"?`)) return;
-    await fetch(`/api/images?clientId=${activeClientId}&name=${encodeURIComponent(name)}`, { method: "DELETE" });
-    setImages(prev => prev.filter(i => i.name !== name));
+  const handleDelete = async (img: ImageRecord) => {
+    if (!confirm(`Smazat obrázek "${img.name}"?`)) return;
+    await fetch(`/api/images?id=${img.id}`, { method: "DELETE" });
+    setImages(prev => prev.filter(i => i.id !== img.id));
   };
 
-  const handleCopy = (url: string) => {
-    navigator.clipboard.writeText(url);
-    setCopiedUrl(url);
-    setTimeout(() => setCopiedUrl(null), 2000);
+  const handleCopy = (img: ImageRecord) => {
+    navigator.clipboard.writeText(img.url);
+    setCopiedId(img.id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -89,7 +92,6 @@ export default function ImagesAdmin() {
           <span className="text-sm font-semibold text-white">Galerie obrázků</span>
 
           <div className="ml-auto flex items-center gap-3">
-            {/* Client selector */}
             <div className="relative">
               <button
                 onClick={() => setClientOpen(o => !o)}
@@ -149,25 +151,27 @@ export default function ImagesAdmin() {
             <p className="text-xs text-gray-600 mb-6">{images.length} obrázků</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {images.map(img => (
-                <div key={img.name} className="group relative bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-600 transition-all">
+                <div key={img.id} className="group relative bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-600 transition-all">
                   <div className="aspect-square bg-gray-800 overflow-hidden">
                     <img src={img.url} alt={img.name} className="w-full h-full object-cover" loading="lazy" />
                   </div>
                   <div className="p-2">
-                    <p className="text-[10px] text-gray-500 truncate" title={img.name}>{img.name}</p>
+                    <p className="text-[10px] text-gray-400 truncate" title={img.name}>{img.name}</p>
+                    <p className="text-[9px] text-gray-600 font-mono truncate" title={img.url}>
+                      {img.path}
+                    </p>
                     <p className="text-[9px] text-gray-700">{formatSize(img.size)}</p>
                   </div>
-                  {/* Hover actions */}
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <button
-                      onClick={() => handleCopy(img.url)}
+                      onClick={() => handleCopy(img)}
                       title="Kopírovat URL"
                       className="p-2 bg-gray-800 hover:bg-indigo-600 rounded-lg text-white transition-colors"
                     >
-                      {copiedUrl === img.url ? <Check size={14} /> : <Copy size={14} />}
+                      {copiedId === img.id ? <Check size={14} /> : <Copy size={14} />}
                     </button>
                     <button
-                      onClick={() => handleDelete(img.name)}
+                      onClick={() => handleDelete(img)}
                       title="Smazat"
                       className="p-2 bg-gray-800 hover:bg-red-600 rounded-lg text-white transition-colors"
                     >
