@@ -1,7 +1,6 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-// @ts-expect-error jszip types
 import JSZip from "jszip";
 import { supabase } from "@/lib/supabase";
 import { buildEmailHtml } from "@/lib/buildEmail";
@@ -76,8 +75,9 @@ export async function GET(req: Request) {
   const zipBase64 = await zip.generateAsync({ type: "base64", compression: "DEFLATE" });
   const slug = (data.name as string).toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") || "newsletter";
   const binary = Buffer.from(zipBase64, "base64");
+  const arrayBuffer: ArrayBuffer = binary.buffer.slice(binary.byteOffset, binary.byteOffset + binary.byteLength) as ArrayBuffer;
 
-  return new NextResponse(binary, {
+  return new NextResponse(arrayBuffer, {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${slug}.zip"`,
